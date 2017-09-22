@@ -1,3 +1,5 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 import numpy as np
 from matplotlib import pyplot as plt
 

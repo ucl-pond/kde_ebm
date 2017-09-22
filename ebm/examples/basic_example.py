@@ -1,4 +1,5 @@
-# from ebm.Distributions import Gaussian
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 from ebm import MixtureModel
 from ebm import MCMC
 from ebm import plotting

@@ -1,3 +1,5 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 from ..Distributions import Gaussian
 from .. import MixtureModel
 from .. import MCMC

@@ -1,3 +1,5 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 from ..Distributions import Gaussian
 import pickle as pkl
 import os

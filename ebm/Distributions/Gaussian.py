@@ -1,3 +1,5 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 from scipy import stats
 import numpy as np
 

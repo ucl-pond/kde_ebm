@@ -1,3 +1,5 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 from setuptools import setup
 
 setup(name='ebm',
@@ -6,6 +8,6 @@ setup(name='ebm',
       url='',
       author='Nicholas C. Firth',
       author_email='nicholas.firth@ucl.ac.uk',
-      license='MIT',
+      license='TBC',
       packages=['ebm'],
       zip_safe=False)

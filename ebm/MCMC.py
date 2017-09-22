@@ -1,3 +1,5 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# License: TBC
 from .EventOrder import EventOrder
 from .MixtureModel import get_prob_mat, fit_all_gmm_models
 from multiprocessing import Pool, cpu_count
