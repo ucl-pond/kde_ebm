@@ -1,7 +1,7 @@
 Event-Based Model
 =================
 
-The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a degenerative disease. The repo contains Python code which can be used to build EBM’s along with an example using ADNI1 data, this example can be run using the `adniEBM.py` file and generates figures associated with the EBM from publications.
+The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a degenerative disease.
 
 
 
