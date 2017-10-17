@@ -2,7 +2,7 @@
 # License: TBC
 from scipy import optimize
 import numpy as np
-from .Distributions import Gaussian
+from ..distributions import Gaussian
 
 
 class MixtureModel():

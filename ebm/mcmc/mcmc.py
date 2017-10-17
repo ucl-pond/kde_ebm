@@ -1,10 +1,10 @@
 # Authors: Nicholas C. Firth <ncfirth87@gmail.com>
 # License: TBC
-from .EventOrder import EventOrder
-from .MixtureModel import get_prob_mat, fit_all_gmm_models
+from ..event_order import EventOrder
+from ..mixture_model import get_prob_mat, fit_all_gmm_models
 from multiprocessing import Pool, cpu_count
 from itertools import permutations
-from plotting import mixture_model_grid, mcmc_trace, greedy_ascent_trace
+from ..plotting import mixture_model_grid, mcmc_trace, greedy_ascent_trace
 import numpy as np
 
 

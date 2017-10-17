@@ -1,5 +1,5 @@
 # Authors: Nicholas C. Firth <ncfirth87@gmail.com>
 # License: TBC
-from .gaussian import Gaussian
+from .event_order import EventOrder
 
-__all__ = ['Gaussian', ]
+__all__ = ['EventOrder', ]
