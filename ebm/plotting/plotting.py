@@ -17,11 +17,13 @@ def greedy_ascent_trace(greedy_dict):
     return fig, ax
 
 
-def mixture_model_grid(X, y, mixtures, score_names=None):
+def mixture_model_grid(X, y, mixtures,
+                       score_names=None, class_names=None):
     n_particp, n_biomarkers = X.shape
-    if(score_names is None):
+    if score_names is None:
         score_names = ['BM{}'.format(x+1) for x in range(n_biomarkers)]
-
+    if class_names is None:
+        class_names = ['CN', 'AD']
     n_x = np.round(np.sqrt(n_biomarkers)).astype(int)
     n_y = np.ceil(np.sqrt(n_biomarkers)).astype(int)
     fig, ax = plt.subplots(n_y, n_x, figsize=(10, 10))
@@ -32,14 +34,10 @@ def mixture_model_grid(X, y, mixtures, score_names=None):
 
         hist_dat = [bio_X[bio_y == 0],
                     bio_X[bio_y == 1]]
-        labels = ['CN', 'AD']
+
         hist_c = colors[:2]
-        if(2 in y):
-            hist_dat.append(bio_X[bio_y == 2])
-            labels.append('MCI')
-            hist_c.append(colors[2])
         leg1 = ax[i // n_x, i % n_x].hist(hist_dat,
-                                          label=labels,
+                                          label=class_names,
                                           normed=True,
                                           color=hist_c,
                                           alpha=0.7,
@@ -61,7 +59,7 @@ def mixture_model_grid(X, y, mixtures, score_names=None):
     i += 1
     for j in range(i, n_x*n_y):
         fig.delaxes(ax[j // n_x, j % n_x])
-    fig.legend(leg1[2]+leg2, labels + ['Probability'],
+    fig.legend(leg1[2]+leg2, list(class_names) + ['Probability'],
                loc='lower right', fontsize=15)
     fig.tight_layout()
     return fig, ax
@@ -79,10 +77,10 @@ def mcmc_trace(mcmc_samples):
 
 
 def mcmc_uncert_mat(mcmc_samples, ml_order=None, score_names=None):
-    if(ml_order is None):
+    if ml_order is None:
         ml_order = mcmc_samples[0].ordering
     n_biomarkers = ml_order.shape[0]
-    if(score_names is None):
+    if score_names is None:
         score_names = ['BM{}'.format(x+1) for x in range(n_biomarkers)]
     all_orders = [x.ordering for x in mcmc_samples]
     all_orders = np.array(all_orders)
@@ -112,32 +110,30 @@ def mcmc_uncert_mat(mcmc_samples, ml_order=None, score_names=None):
     return fig, ax
 
 
-def stage_histogram(stages, y, max_stage, str_diag):
+def stage_histogram(stages, y, max_stage=None, class_names=None):
     fig, ax = plt.subplots()
     hist_dat = [stages[y == 0],
                 stages[y == 1]]
-    labels = ['Young Adult', str_diag]
+    if class_names is None:
+        class_names = ['CN', 'AD']
+    if max_stage is None:
+        max_stage = stages.max()
     hist_c = colors[:2]
-    if(2 in y):
-        hist_dat.append(stages[y == 2])
-        labels.append('MCI')
-        hist_c.append(colors[2])
-    ax.hist(hist_dat,
-            label=labels,
-            normed=True,
-            color=hist_c,
-            stacked=False,
-            bins=max_stage)
+    n, bins, patch = ax.hist(hist_dat,
+                             label=class_names,
+                             normed=True,
+                             color=hist_c,
+                             stacked=False,
+                             bins=max_stage+1)
     ax.legend(loc=0, fontsize=20)
 
-    idxs = np.arange(max_stage)
-    ax.set_xticks(idxs)
+    idxs = np.arange(max_stage+1)
+    bin_w = bins[1] - bins[0]
+    ax.set_xticks(bins+bin_w/2)
     ax.set_xticklabels([str(x) for x in idxs])
 
     ax.set_ylabel('Fraction', fontsize=20)
     ax.set_xlabel('EBM Stage', fontsize=20)
-    for label in ax.xaxis.get_ticklabels()[1::2]:
-        label.set_visible(False)
     ax.tick_params(axis='both', which='major', labelsize=13)
     fig.tight_layout()
     return fig, ax

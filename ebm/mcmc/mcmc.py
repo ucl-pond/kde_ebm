@@ -18,7 +18,7 @@ def greedy_ascent_creation(prob_mat, n_iter=1000, n_init=10):
         for iter_n in range(1, n_iter):
             new_order = current_order.swap_events()
             new_order.score_ordering(prob_mat)
-            if(new_order > current_order):
+            if new_order > current_order:
                 current_order = new_order
             starts_dict[start_idx].append(current_order)
     return starts_dict
@@ -31,20 +31,20 @@ def mcmc(X, mixture_models, n_iter=100000, greedy_n_iter=1000,
     greedy_dict = greedy_ascent_creation(prob_mat,
                                          greedy_n_iter,
                                          greedy_n_init)
-    if(plot):
+    if plot:
         fig, ax = greedy_ascent_trace(greedy_dict)
         fig.show()
     current_order = greedy_dict[0][-1]
     for i in range(1, greedy_n_init):
         new_order = greedy_dict[i][-1]
-        if(new_order > current_order):
+        if new_order > current_order:
             current_order = new_order
     mcmc_samples = [current_order]
     for i in range(1, n_iter):
         new_order = current_order.swap_events()
         new_order.score_ordering(prob_mat)
         ratio = np.exp(new_order - current_order)
-        if(ratio > np.random.random()):
+        if ratio > np.random.random():
             current_order = new_order
         mcmc_samples.append(current_order)
     mcmc_samples.sort(reverse=True)
@@ -69,7 +69,7 @@ def create_bootstrap(X, y):
     boot_y[2:] = y[samples]
     iqr = np.nanpercentile(boot_X, 75, axis=0)
     iqr -= np.nanpercentile(boot_X, 25, axis=0)
-    if(np.any(iqr == 0)):
+    if np.any(iqr == 0):
         return create_bootstrap(X, y)
     return boot_X, boot_y
 
@@ -81,7 +81,7 @@ def bootstrap_ebm(X, y, n_bootstrap=50, score_names=None, plot=False):
         kde_mixtures = fit_all_gmm_models(boot_X, boot_y)
         mcmc_samples = mcmc(boot_X, kde_mixtures, plot=False)
         bootstrap_samples += mcmc_samples
-        if(plot):
+        if plot:
             fig, ax = mixture_model_grid(boot_X, boot_y,
                                          kde_mixtures, score_names)
             fig.savefig('Boostrap{}_mixtures.png'.format(i+1))
@@ -97,7 +97,7 @@ def parallell_bootstrap(X, y, n_bootstrap=50,
     bootstrap_samples = []
     for i in range(n_bootstrap):
         bootstrap_samples.append(create_bootstrap(X, y))
-    if(n_processes == -1):
+    if n_processes == -1:
         n_processes = cpu_count()
     pool = Pool(processes=n_processes)
     mcmc_samples = pool.map(parallell_bootstrap_, bootstrap_samples)

@@ -38,7 +38,7 @@ def load_synthetic(data_file_name):
         n_samples = int(temp[0])
         n_features = int(temp[1])
         target_names = np.array(temp[2:])
-        feature_names = ['bm%i' % x for x in range(n_features)]
+        feature_names = ['BM%i' % (x+1) for x in range(n_features)]
         feature_names = np.array(feature_names)
         data = np.empty((n_samples, n_features))
         target = np.empty((n_samples,), dtype=np.int)

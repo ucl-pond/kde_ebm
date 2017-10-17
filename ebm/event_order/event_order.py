@@ -6,10 +6,10 @@ import numpy as np
 class EventOrder(object):
     def __init__(self, ordering=None, n_biomarkers=None, score=None):
         super(EventOrder, self).__init__()
-        if(ordering is None and n_biomarkers is None):
+        if ordering is None and n_biomarkers is None:
             raise ValueError('EventOrder __init__ takes one arguement,'
                              ' zero given')
-        if(ordering is None):
+        if ordering is None:
             self.ordering = np.arange(n_biomarkers)
             np.random.shuffle(self.ordering)
             self.n_biomarkers = n_biomarkers
@@ -66,25 +66,25 @@ class EventOrder(object):
         return EventOrder(ordering=new_event_order)
 
     def __lt__(self, other):
-        if(self.score is None and other.score is None):
+        if self.score is None and other.score is None:
             raise ValueError('Cannot compare unscored orderings')
-        if(self.score < other.score):
+        if self.score < other.score:
             return True
         return False
 
     def __gt__(self, other):
-        if(self.score is None and other.score is None):
+        if self.score is None and other.score is None:
             raise ValueError('Cannot compare unscored orderings')
-        if(self.score > other.score):
+        if self.score > other.score:
             return True
         return False
 
     def __add__(self, other):
-        if(self.score is None and other.score is None):
+        if self.score is None and other.score is None:
             raise ValueError('Cannot subtract unscored orderings')
         return self.score + other.score
 
     def __sub__(self, other):
-        if(self.score is None and other.score is None):
+        if self.score is None and other.score is None:
             raise ValueError('Cannot subtract unscored orderings')
         return self.score - other.score
