@@ -10,12 +10,12 @@ import numpy as np
 
 def greedy_ascent_creation(prob_mat, n_iter=1000, n_init=10):
     n_biomarkers = prob_mat.shape[1]
-    starts_dict = dict((x, []) for x in xrange(n_init))
-    for start_idx in xrange(n_init):
+    starts_dict = dict((x, []) for x in range(n_init))
+    for start_idx in range(n_init):
         current_order = EventOrder(n_biomarkers=n_biomarkers)
         current_order.score_ordering(prob_mat)
         starts_dict[start_idx].append(current_order)
-        for iter_n in xrange(1, n_iter):
+        for iter_n in range(1, n_iter):
             new_order = current_order.swap_events()
             new_order.score_ordering(prob_mat)
             if(new_order > current_order):
@@ -35,12 +35,12 @@ def mcmc(X, mixture_models, n_iter=100000, greedy_n_iter=1000,
         fig, ax = greedy_ascent_trace(greedy_dict)
         fig.show()
     current_order = greedy_dict[0][-1]
-    for i in xrange(1, greedy_n_init):
+    for i in range(1, greedy_n_init):
         new_order = greedy_dict[i][-1]
         if(new_order > current_order):
             current_order = new_order
     mcmc_samples = [current_order]
-    for i in xrange(1, n_iter):
+    for i in range(1, n_iter):
         new_order = current_order.swap_events()
         new_order.score_ordering(prob_mat)
         ratio = np.exp(new_order - current_order)
@@ -60,7 +60,7 @@ def create_bootstrap(X, y):
     boot_y = np.empty(y.shape, dtype='int32')
     idxs = np.arange(y.shape[0])
 
-    for i in xrange(2):
+    for i in range(2):
         sample = np.random.choice(idxs[y == i])
         boot_X[i, :] = X[sample, :]
         boot_y[i] = y[sample]
@@ -76,7 +76,7 @@ def create_bootstrap(X, y):
 
 def bootstrap_ebm(X, y, n_bootstrap=50, score_names=None, plot=False):
     bootstrap_samples = []
-    for i in xrange(n_bootstrap):
+    for i in range(n_bootstrap):
         boot_X, boot_y = create_bootstrap(X, y)
         kde_mixtures = fit_all_gmm_models(boot_X, boot_y)
         mcmc_samples = mcmc(boot_X, kde_mixtures, plot=False)
@@ -95,14 +95,14 @@ def bootstrap_ebm(X, y, n_bootstrap=50, score_names=None, plot=False):
 def parallell_bootstrap(X, y, n_bootstrap=50,
                         n_processes=-1):
     bootstrap_samples = []
-    for i in xrange(n_bootstrap):
+    for i in range(n_bootstrap):
         bootstrap_samples.append(create_bootstrap(X, y))
     if(n_processes == -1):
         n_processes = cpu_count()
     pool = Pool(processes=n_processes)
     mcmc_samples = pool.map(parallell_bootstrap_, bootstrap_samples)
     samples_formatted = []
-    for i in xrange(n_bootstrap):
+    for i in range(n_bootstrap):
         samples_formatted += mcmc_samples[0]
         del mcmc_samples[0]
     return samples_formatted

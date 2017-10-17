@@ -8,7 +8,7 @@ colors = ['C{}'.format(x) for x in range(10)]
 
 def greedy_ascent_trace(greedy_dict):
     fig, ax = plt.subplots()
-    for key, value in greedy_dict.iteritems():
+    for key, value in greedy_dict.items():
         scores = [x.score for x in value]
         iter_n = np.arange(len(scores))+1
         ax.plot(iter_n, scores, label='Init {}'.format(key+1))
@@ -20,12 +20,12 @@ def greedy_ascent_trace(greedy_dict):
 def mixture_model_grid(X, y, mixtures, score_names=None):
     n_particp, n_biomarkers = X.shape
     if(score_names is None):
-        score_names = ['BM{}'.format(x+1) for x in xrange(n_biomarkers)]
+        score_names = ['BM{}'.format(x+1) for x in range(n_biomarkers)]
 
     n_x = np.round(np.sqrt(n_biomarkers)).astype(int)
     n_y = np.ceil(np.sqrt(n_biomarkers)).astype(int)
     fig, ax = plt.subplots(n_y, n_x, figsize=(10, 10))
-    for i in xrange(n_biomarkers):
+    for i in range(n_biomarkers):
         bio_X = X[:, i]
         bio_y = y[~np.isnan(bio_X)]
         bio_X = bio_X[~np.isnan(bio_X)]
@@ -59,7 +59,7 @@ def mixture_model_grid(X, y, mixtures, score_names=None):
         ax[i // n_x, i % n_x].set_title(score_names[i])
         ax[i // n_x, i % n_x].axes.get_yaxis().set_visible(False)
     i += 1
-    for j in xrange(i, n_x*n_y):
+    for j in range(i, n_x*n_y):
         fig.delaxes(ax[j // n_x, j % n_x])
     fig.legend(leg1[2]+leg2, labels + ['Probability'],
                loc='lower right', fontsize=15)
@@ -83,11 +83,11 @@ def mcmc_uncert_mat(mcmc_samples, ml_order=None, score_names=None):
         ml_order = mcmc_samples[0].ordering
     n_biomarkers = ml_order.shape[0]
     if(score_names is None):
-        score_names = ['BM{}'.format(x+1) for x in xrange(n_biomarkers)]
+        score_names = ['BM{}'.format(x+1) for x in range(n_biomarkers)]
     all_orders = [x.ordering for x in mcmc_samples]
     all_orders = np.array(all_orders)
     confusion_mat = np.zeros((n_biomarkers, n_biomarkers))
-    for i in xrange(n_biomarkers):
+    for i in range(n_biomarkers):
         confusion_mat[i, :] = np.sum(all_orders == ml_order[i], axis=0)
 
     fig, ax = plt.subplots(figsize=(8, 6))

@@ -2,7 +2,7 @@
 # License: TBC
 from scipy import optimize
 import numpy as np
-from ..distributions import Gaussian
+from ..distributions import gaussian
 
 
 class MixtureModel():
@@ -217,7 +217,7 @@ def get_prob_mat(X, mixture_models):
     """
 
     prob_mat = np.empty((X.shape[0], X.shape[1], 2))
-    for i in xrange(X.shape[1]):
+    for i in range(X.shape[1]):
         prob_mat[:, i, 0] = mixture_models[i].probability(X[:, i])
     prob_mat[:, :, 1] = 1-prob_mat[:, :, 0]
     return prob_mat
@@ -226,11 +226,11 @@ def get_prob_mat(X, mixture_models):
 def fit_all_gmm_models(X, y):
     n_particp, n_biomarkers = X.shape
     mixture_models = []
-    for i in xrange(n_biomarkers):
+    for i in range(n_biomarkers):
         bio_y = y[~np.isnan(X[:, i])]
         bio_X = X[~np.isnan(X[:, i]), i]
-        cn_comp = Gaussian.Gaussian()
-        ad_comp = Gaussian.Gaussian()
+        cn_comp = gaussian.Gaussian()
+        ad_comp = gaussian.Gaussian()
         mm = MixtureModel(cn_comp, ad_comp)
         mm.fit(bio_X, bio_y)
         mixture_models.append(mm)

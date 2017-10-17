@@ -41,7 +41,7 @@ class EventOrder(object):
         k = prob_mat.shape[1]+1
         p_perm = np.zeros((prob_mat.shape[0], k))
 
-        for i in xrange(k):
+        for i in range(k):
             p_perm[:, i] = np.prod(p_yes[:, :i], 1)*np.prod(p_no[:, i:k-1], 1)
         return p_perm
 
@@ -53,7 +53,7 @@ class EventOrder(object):
         k = n_biomarkers+1
 
         stage_likelihoods = np.empty((n_particp, n_biomarkers+1))
-        for i in xrange(k):
+        for i in range(k):
             stage_likelihoods[:, i] = np.prod(p_yes[:, :i], 1)*np.prod(p_no[:, i:n_biomarkers], 1)
         stages = np.argmax(stage_likelihoods, axis=1)
         return stages, stage_likelihoods
