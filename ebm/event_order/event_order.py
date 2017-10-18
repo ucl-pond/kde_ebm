@@ -65,6 +65,12 @@ class EventOrder(object):
         new_event_order[swap_bm] = new_event_order[swap_bm[::-1]]
         return EventOrder(ordering=new_event_order)
 
+    def __eq__(self, other):
+        return np.all(self.ordering == other.ordering)
+
+    def __hash__(self):
+        return hash(('ordering', self.ordering.tostring()))
+
     def __lt__(self, other):
         if self.score is None and other.score is None:
             raise ValueError('Cannot compare unscored orderings')
@@ -88,3 +94,10 @@ class EventOrder(object):
         if self.score is None and other.score is None:
             raise ValueError('Cannot subtract unscored orderings')
         return self.score - other.score
+
+    def __repr__(self):
+        return 'EventOrder(order=%r, score=%r)' % (self.ordering,
+                                                   self.score)
+
+    def __str__(self):
+        return self.__repr__()

@@ -106,3 +106,9 @@ class Gaussian():
             Initial values of parameters in theta for optimisation.
         """
         return [np.nanmean(X_comp), np.nanstd(X_comp)]
+
+    def __repr__(self,):
+        return "Gaussian(mu=%r,sigma=%r)" % (self.mu, self.sigma)
+
+    def __str__(self):
+        return self.__repr__()

@@ -46,7 +46,7 @@ def mixture_model_grid(X, y, mixtures,
         # controls_score, patholog_score = mixtures[i].pdf(linspace)
         controls_score = mixtures[i].cn_comp.pdf(linspace)
         patholog_score = mixtures[i].ad_comp.pdf(linspace)
-        probability = mixtures[i].probability(linspace)
+        probability = 1-mixtures[i].probability(linspace)
         probability *= np.max((patholog_score, controls_score))
         ax[i // n_x, i % n_x].plot(linspace, controls_score,
                                    color=colors[0])
@@ -59,7 +59,7 @@ def mixture_model_grid(X, y, mixtures,
     i += 1
     for j in range(i, n_x*n_y):
         fig.delaxes(ax[j // n_x, j % n_x])
-    fig.legend(leg1[2]+leg2, list(class_names) + ['Probability'],
+    fig.legend(leg1[2]+leg2, list(class_names) + ['p(event occured)'],
                loc='lower right', fontsize=15)
     fig.tight_layout()
     return fig, ax
@@ -79,6 +79,8 @@ def mcmc_trace(mcmc_samples):
 def mcmc_uncert_mat(mcmc_samples, ml_order=None, score_names=None):
     if ml_order is None:
         ml_order = mcmc_samples[0].ordering
+    else:
+        ml_order = ml_order.ordering
     n_biomarkers = ml_order.shape[0]
     if score_names is None:
         score_names = ['BM{}'.format(x+1) for x in range(n_biomarkers)]
