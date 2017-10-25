@@ -45,4 +45,4 @@ def load_synthetic(data_file_name):
         for i, ir in enumerate(data_file):
             data[i] = np.asarray(ir[:-1], dtype=np.float64)
             target[i] = np.asarray(ir[-1], dtype=np.int)
-    return data, target, target_names, feature_names
+    return data, target, feature_names, target_names

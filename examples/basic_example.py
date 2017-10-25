@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 
 def main():
-    X, y, cname, bmname = datasets.load_synthetic('synthetic_1500_10.csv')
+    X, y, bmname, cname = datasets.load_synthetic('synthetic_1500_10.csv')
     mixture_models = []
     mixture_models = mixture_model.fit_all_gmm_models(X, y)
     fig, ax = plotting.mixture_model_grid(X, y, mixture_models,

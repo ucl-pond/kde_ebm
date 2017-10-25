@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 
 def main():
-    X, y, cname, bmname = datasets.load_synthetic('synthetic_1500_10.csv')
+    X, y, bmname, cname = datasets.load_synthetic('synthetic_1500_10.csv')
     mixture_models = []
     for i in range(X.shape[1]):
         h_model = distributions.Gaussian()
