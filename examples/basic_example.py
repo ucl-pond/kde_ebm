@@ -23,7 +23,7 @@ def main():
     # Now we fit our disease sequence, using greedy ascent followed by
     # MCMC optimisation
     res = mcmc.mcmc(X, mixture_models, n_iter=500,
-                    greedy_n_iter=10, greedy_n_init=2)
+                    greedy_n_iter=10, greedy_n_init=5)
 
     # Then plot these using a positional variance diagram to visualise
     # any uncertainty in the sequence
