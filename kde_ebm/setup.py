@@ -2,7 +2,7 @@
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
 
-    config = Configuration('ebm', parent_package, top_path)
+    config = Configuration('kde_ebm', parent_package, top_path)
 
     # submodules which do not have their own setup.py
     # we must manually add sub-submodules & tests

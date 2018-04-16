@@ -1,7 +1,7 @@
 # Authors: Nicholas C. Firth <ncfirth87@gmail.com>
 # License: TBC
 from ..event_order import EventOrder
-from ..mixture_model import get_prob_mat, fit_all_gmm_models
+from ..mixture_model import get_prob_mat, fit_all_gmm_models, fit_all_kde_models
 from multiprocessing import Pool, cpu_count
 from ..plotting import mixture_model_grid, mcmc_trace, greedy_ascent_trace
 import numpy as np
@@ -23,7 +23,7 @@ def greedy_ascent_creation(prob_mat, n_iter=1000, n_init=10):
     return starts_dict
 
 
-def mcmc(X, mixture_models, n_iter=100000, greedy_n_iter=1000,
+def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
          greedy_n_init=10, plot=True):
     prob_mat = get_prob_mat(X, mixture_models)
     greedy_dict = greedy_ascent_creation(prob_mat,
@@ -114,6 +114,6 @@ def parallell_bootstrap(X, y, n_bootstrap=50,
 
 def parallell_bootstrap_(Xy):
     boot_X, boot_y = Xy
-    kde_mixtures = fit_all_gmm_models(boot_X, boot_y)
+    kde_mixtures = fit_all_kde_models(boot_X, boot_y)
     mcmc_samples = mcmc(boot_X, kde_mixtures, plot=False)
     return mcmc_samples

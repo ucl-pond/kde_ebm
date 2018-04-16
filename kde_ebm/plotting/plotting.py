@@ -2,6 +2,7 @@
 # License: TBC
 import numpy as np
 from matplotlib import pyplot as plt
+from ..mixture_model import ParametricMM
 
 colors = ['C{}'.format(x) for x in range(10)]
 
@@ -43,9 +44,11 @@ def mixture_model_grid(X, y, mixtures,
                                           alpha=0.7,
                                           stacked=True)
         linspace = np.linspace(bio_X.min(), bio_X.max(), 100).reshape(-1, 1)
-        # controls_score, patholog_score = mixtures[i].pdf(linspace)
-        controls_score = mixtures[i].cn_comp.pdf(linspace)
-        patholog_score = mixtures[i].ad_comp.pdf(linspace)
+        if isinstance(mixtures[i], ParametricMM):
+            controls_score, patholog_score = mixtures[i].pdf(mixtures[i].theta,
+                                                             linspace)
+        else:
+            controls_score, patholog_score = mixtures[i].pdf(linspace)
         probability = 1-mixtures[i].probability(linspace)
         probability *= np.max((patholog_score, controls_score))
         ax[i // n_x, i % n_x].plot(linspace, controls_score,
@@ -117,7 +120,7 @@ def stage_histogram(stages, y, max_stage=None, class_names=None):
     hist_dat = [stages[y == 0],
                 stages[y == 1]]
     if class_names is None:
-        class_names = ['CN', 'AD']
+        class_names = ['CN', 'tAD']
     if max_stage is None:
         max_stage = stages.max()
     hist_c = colors[:2]

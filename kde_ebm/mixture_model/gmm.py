@@ -4,7 +4,7 @@ from scipy import optimize
 import numpy as np
 
 
-class MixtureModel():
+class ParametricMM():
     """Wraps up two distributions and the mixture parameter.
 
     Attributes
@@ -17,7 +17,7 @@ class MixtureModel():
         Mixing fraction, as percent of healthy patients.
     """
     def __init__(self, cn_comp=None, ad_comp=None, mixture=None):
-        """Initiate new MixtureModel object
+        """Initiate new GMM object
 
         Parameters
         ----------
@@ -31,6 +31,44 @@ class MixtureModel():
         self.cn_comp = cn_comp
         self.ad_comp = ad_comp
         self.mix = mixture
+        self.theta = None
+
+    def pdf(self, theta, X):
+        """Summary
+
+        Parameters
+        ----------
+        theta : array-like, shape(5,)
+            List containing the parameters required for a mixture model.
+            [hModelMu, hModelSig, dModelMu, dModelSig, mixture]
+        inData : array-like, shape(numPatients,)
+            Biomarker measurements for patients.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+        if theta is None:
+            theta = self.theta
+        if np.isnan(X.sum()):
+            raise ValueError('NaN in likelihood')
+        if np.isnan(theta.sum()):
+            out = np.empty(X.shape[0])
+            out[:] = np.nan
+            return out, out
+        n_cn_params = self.cn_comp.n_params
+        n_ad_params = self.ad_comp.n_params
+        cn_theta = theta[:n_cn_params]
+        ad_theta = theta[n_cn_params:n_cn_params+n_ad_params]
+        mixture = theta[-1]
+
+        self.cn_comp.set_theta(cn_theta)
+        self.ad_comp.set_theta(ad_theta)
+
+        cn_pdf = self.cn_comp.pdf(X)*mixture
+        ad_pdf = self.ad_comp.pdf(X)*(1-mixture)
+        return cn_pdf, ad_pdf
 
     def likelihood(self, theta, X):
         """"Calculates the likelihood of the data given the model
@@ -53,25 +91,7 @@ class MixtureModel():
         """
         # thetaNums allows us to use other distributions with a varying
         # number of paramters. Not included in this version of the code.
-
-        # if len(theta[np.isnan(theta)]:
-            # return 1e100
-        if np.isnan(X.sum()):
-            raise ValueError('NaN in likelihood')
-        if np.isnan(theta.sum()):
-            return 1e100
-        n_cn_params = self.cn_comp.n_params
-        n_ad_params = self.ad_comp.n_params
-        cn_theta = theta[:n_cn_params]
-        ad_theta = theta[n_cn_params:n_cn_params+n_ad_params]
-        mixture = theta[-1]
-
-        self.cn_comp.set_theta(cn_theta)
-        self.ad_comp.set_theta(ad_theta)
-
-        cn_pdf = self.cn_comp.pdf(X)*mixture
-        ad_pdf = self.ad_comp.pdf(X)*(1-mixture)
-
+        cn_pdf, ad_pdf = self.pdf(theta, X)
         data_likelihood = cn_pdf + ad_pdf
         data_likelihood[data_likelihood == 0] = np.finfo(float).eps
         data_likelihood = np.log(data_likelihood)
@@ -85,34 +105,9 @@ class MixtureModel():
         raise NotImplementedError('Fixed ad component not yet needed')
 
     def probability(self, X):
-        """Get the probability of some data based on the mixture model
-
-        Parameters
-        ----------
-        inData : array-like, shape(numPatients,)
-            Biomarker measurements for patients.
-
-        Returns
-        -------
-        hProb : array-like, shape(numPatients, 2)
-            Probability of patients biomarkers being normal according to the
-            MixtureModel.
-        dProb : array-like, shape(numPatients, 2)
-            Probability of patients biomarkers being abnormal according to the
-            MixtureModel.
-        """
-        nan_mask = np.isnan(X)
-        out_prob = np.empty(X.shape)
-        cn_likelihood = self.cn_comp.pdf(X[~nan_mask])
-        ad_likelihood = self.ad_comp.pdf(X[~nan_mask])
-
-        err_mask = (cn_likelihood == 0) & (ad_likelihood == 0)
-        cn_likelihood[err_mask] = 1
-        ad_likelihood[err_mask] = 1
-
-        out_prob[~nan_mask] = cn_likelihood/(cn_likelihood+ad_likelihood)
-        out_prob[nan_mask] = .5
-        return out_prob
+        theta = self.theta
+        controls_score, patholog_score = self.pdf(theta, X)
+        return controls_score / (controls_score+patholog_score)
 
     def fit(self, X, y):
         """This will fit a mixture model to some given data. Labelled data
@@ -161,6 +156,7 @@ class MixtureModel():
         self.cn_comp.set_theta(res[:n_cn_params])
         self.ad_comp.set_theta(res[n_cn_params:n_cn_params+n_ad_params])
         self.mix = res[-1]
+        self.theta = res
         return res
 
     def fit_constrained(self, X, y, fixed_component=None):

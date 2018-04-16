@@ -1,9 +1,9 @@
 # Authors: Nicholas C. Firth <ncfirth87@gmail.com>
 # License: TBC
-from ebm import mixture_model
-from ebm import mcmc
-from ebm import plotting
-from ebm import datasets
+from kde_ebm import mixture_model
+from kde_ebm import mcmc
+from kde_ebm import plotting
+from kde_ebm import datasets
 from matplotlib import pyplot as plt
 
 
@@ -14,7 +14,7 @@ def main():
     X, y, bmname, cname = datasets.load_synthetic('synthetic_1500_10.csv')
 
     # Fit GMM for each biomarker and plot the results
-    mixture_models = mixture_model.fit_all_gmm_models(X, y)
+    mixture_models = mixture_model.fit_all_kde_models(X, y)
     fig, ax = plotting.mixture_model_grid(X, y, mixture_models,
                                           score_names=bmname,
                                           class_names=cname)

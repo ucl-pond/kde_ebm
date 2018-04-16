@@ -4,4 +4,4 @@
 from .mcmc import mcmc
 from .mcmc import bootstrap_ebm
 from .mcmc import parallell_bootstrap
-from .base import enumerate_all
+from .utils import enumerate_all
