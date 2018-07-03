@@ -37,6 +37,10 @@ def get_prob_mat(X, mixture_models):
 
 
 def fit_all_gmm_models(X, y):
+    #* Extract only the first two diagnoses
+    X = X[y<2]
+    y = y[y<2]
+    
     n_particp, n_biomarkers = X.shape
     mixture_models = []
     for i in range(n_biomarkers):
@@ -51,6 +55,10 @@ def fit_all_gmm_models(X, y):
 
 
 def fit_all_kde_models(X, y):
+    #* Extract only the first two diagnoses
+    X = X[y<2]
+    y = y[y<2]
+    
     n_particp, n_biomarkers = X.shape
     kde_mixtures = []
     for i in range(n_biomarkers):

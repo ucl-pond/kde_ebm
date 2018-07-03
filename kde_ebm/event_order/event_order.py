@@ -7,7 +7,7 @@ class EventOrder(object):
     def __init__(self, ordering=None, n_biomarkers=None, score=None):
         super(EventOrder, self).__init__()
         if ordering is None and n_biomarkers is None:
-            raise ValueError('EventOrder __init__ takes one arguement,'
+            raise ValueError('EventOrder __init__ takes one argument,'
                              ' zero given')
         if ordering is None:
             self.ordering = np.arange(n_biomarkers)

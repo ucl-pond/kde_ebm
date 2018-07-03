@@ -53,48 +53,110 @@ def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
 
 
 def create_bootstrap(X, y):
-    if np.bincount(y).shape[0] > 2:
-        raise NotImplementedError(('Only binary labels'
-                                   'are currently supported'))
+    #if np.bincount(y).shape[0] > 2:
+    #    raise NotImplementedError(('Only binary labels'
+    #                               'are currently supported'))
     n_particp, n_biomarkers = X.shape
     boot_X = np.empty(X.shape)
     boot_y = np.empty(y.shape, dtype='int32')
     idxs = np.arange(y.shape[0])
 
-    for i in range(2):
-        sample = np.random.choice(idxs[y == i])
+    #for i in range(2):
+    y_u = np.unique(y)
+    for i in range(len(y_u)):
+        sample = np.random.choice(idxs[y == y_u[i]])
         boot_X[i, :] = X[sample, :]
         boot_y[i] = y[sample]
-    samples = np.random.choice(idxs, size=y.shape[0]-2)
-    boot_X[2:, :] = X[samples, :]
-    boot_y[2:] = y[samples]
+    samples = np.random.choice(idxs, size=y.shape[0]-len(y_u))
+    boot_X[len(y_u):, :] = X[samples, :]
+    boot_y[len(y_u):] = y[samples]
     iqr = np.nanpercentile(boot_X, 75, axis=0)
     iqr -= np.nanpercentile(boot_X, 25, axis=0)
     if np.any(iqr == 0):
         return create_bootstrap(X, y)
     return boot_X, boot_y
 
+# def create_bootstrap_fixed(X, y):
+#     y2 = y[y<2]
+#     X2 = X[y<2]
+#     if np.bincount(y2).shape[0] > 2:
+#         raise NotImplementedError(('Only binary labels'
+#                                    'are currently supported'))
+#     n_particp, n_biomarkers = X.shape
+#     boot_X = np.empty(X.shape)
+#     boot_y = np.empty(y.shape, dtype='int32')
+#     idxs = np.arange(y2.shape[0])
+#
+#     for i in range(2):
+#         sample = np.random.choice(idxs[y2 == i])
+#         boot_X[i, :] = X2[sample, :]
+#         boot_y[i] = y2[sample]
+#     samples = np.random.choice(idxs, size=y.shape[0]-2)
+#     boot_X[2:, :] = X2[samples, :]
+#     boot_y[2:] = y2[samples]
+#     iqr = np.nanpercentile(boot_X, 75, axis=0)
+#     iqr -= np.nanpercentile(boot_X, 25, axis=0)
+#     if np.any(iqr == 0):
+#         return create_bootstrap_fixed(X, y)
+#     return boot_X, boot_y
 
-def bootstrap_ebm(X, y, n_bootstrap=50, n_mcmc_iter=100000,
+
+def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
+                  kde_flag=True,
                   **kwargs):
     bootstrap_samples = []
     for i in range(n_bootstrap):
+        print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
         boot_X, boot_y = create_bootstrap(X, y)
-        kde_mixtures = fit_all_gmm_models(boot_X, boot_y)
-        mcmc_samples = mcmc(boot_X, kde_mixtures, n_iter=n_mcmc_iter,
+        # Choose which MM to use
+        if kde_flag:
+            mixtures = fit_all_kde_models(boot_X, boot_y)
+        else:
+            mixtures = fit_all_gmm_models(boot_X, boot_y)
+        mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
                             plot=False, **kwargs)
         bootstrap_samples += mcmc_samples
         if plot:
             fig, ax = mixture_model_grid(boot_X, boot_y,
-                                         kde_mixtures, score_names)
-            fig.savefig('Boostrap{}_mixtures.png'.format(i+1))
+                                         mixtures, score_names)
+            fig.savefig('Bootstrap{}_mixtures.png'.format(i+1))
             fig.close()
             fig, ax = mcmc_trace(mcmc_samples)
-            fig.savefig('Boostrap{}_mcmc_trace.png'.format(i+1))
+            fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
             fig.close()
     return bootstrap_samples
 
+#* Added by Neil Oxtoby, June 2018 - bootstrapping of the sequence only, not the MM
+def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
+                          score_names=None, plot=False, 
+                          kde_flag=True,
+                          mix_mod=False,
+                          **kwargs):
+    bootstrap_samples = []
+    for i in range(n_bootstrap):
+        boot_X, boot_y = create_bootstrap(X, y)
+        if isinstance(mix_mod,bool):
+            print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
+            if kde_flag:
+                mixtures = fit_all_kde_models(boot_X, boot_y)
+            else:
+                mixtures = fit_all_gmm_models(boot_X, boot_y)
+        else:
+            print('Bootstrap {0} of {1}: not refitting KDE mixtures'.format(i+1,n_bootstrap))
+            mixtures = mix_mod
+        mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
+                            plot=False, **kwargs)
+        bootstrap_samples += mcmc_samples
+        if(plot):
+            fig, ax = mixture_model_grid(boot_X, boot_y,
+                                         mixtures, score_names)
+            fig.savefig('Bootstrap{}_mixtures.png'.format(i+1))
+            fig.close()
+            fig, ax = mcmc_trace(mcmc_samples)
+            fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
+            fig.close()
+    return bootstrap_samples
 
 def parallel_bootstrap(X, y, n_bootstrap=50,
                         n_processes=-1):
@@ -112,8 +174,11 @@ def parallel_bootstrap(X, y, n_bootstrap=50,
     return samples_formatted
 
 
-def parallel_bootstrap_(Xy):
+def parallel_bootstrap_(Xy, kde_flag=True):
     boot_X, boot_y = Xy
-    kde_mixtures = fit_all_kde_models(boot_X, boot_y)
-    mcmc_samples = mcmc(boot_X, kde_mixtures, plot=False)
+    if kde_flag:
+        mixtures = fit_all_kde_models(boot_X, boot_y)
+    else:
+        mixtures = fit_all_gmm_models(boot_X, boot_y)
+    mcmc_samples = mcmc(boot_X, mixtures, plot=False)
     return mcmc_samples
