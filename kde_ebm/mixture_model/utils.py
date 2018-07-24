@@ -65,8 +65,8 @@ def fit_all_kde_models(X, y):
     kde_mixtures = []
     for i in range(n_biomarkers):
         bio_X = X[:, i]
-        bio_y = y[~np.isnan(bio_X)].reshape(-1, 1)
-        bio_X = bio_X[~np.isnan(bio_X)].reshape(-1, 1)
+        bio_y = y[~np.isnan(bio_X)]
+        bio_X = bio_X[~np.isnan(bio_X)]
         kde = KDEMM()
         kde.fit(bio_X, bio_y)
         kde_mixtures.append(kde)

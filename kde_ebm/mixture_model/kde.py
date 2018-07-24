@@ -15,7 +15,7 @@ class KDEMM(object):
 
     def fit(self, X, y):
         sorted_idx = X.argsort(axis=0).flatten()
-        kde_values = X.copy()[sorted_idx]
+        kde_values = X.copy()[sorted_idx].reshape(-1,1)
         kde_labels = y.copy()[sorted_idx]
 
         bin_counts = np.bincount(y).astype(float)
