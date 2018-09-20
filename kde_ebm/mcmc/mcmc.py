@@ -101,6 +101,35 @@ def create_bootstrap(X, y):
 #     return boot_X, boot_y
 
 
+def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
+                  score_names=None, plot=False,
+                  kde_flag=True,
+                  **kwargs):
+    bootstrap_samples = []
+    mixtures_ = []
+    for i in range(n_bootstrap):
+        print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
+        boot_X, boot_y = create_bootstrap(X, y)
+        # Choose which MM to use
+        if kde_flag:
+            mixtures = fit_all_kde_models(boot_X, boot_y)
+        else:
+            mixtures = fit_all_gmm_models(boot_X, boot_y)
+        mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
+                            plot=False, **kwargs)
+        bootstrap_samples += mcmc_samples
+        if plot:
+            fig, ax = mixture_model_grid(boot_X, boot_y,
+                                         mixtures, score_names)
+            fig.savefig('Bootstrap{}_mixtures.png'.format(i+1))
+            fig.close()
+            fig, ax = mcmc_trace(mcmc_samples)
+            fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
+            fig.close()
+        mixtures_.append(mixtures)
+    return mixtures_, bootstrap_samples
+
+#* Added by Neil Oxtoby, September 2018 - return the mixtures
 def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
                   kde_flag=True,
