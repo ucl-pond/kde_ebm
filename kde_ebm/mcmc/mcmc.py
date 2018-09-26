@@ -48,7 +48,6 @@ def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
         if ratio > np.random.random():
             current_order = new_order
         mcmc_samples.append(current_order)
-    mcmc_samples.sort(reverse=True)
     return mcmc_samples
 
 

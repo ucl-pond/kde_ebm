@@ -25,6 +25,7 @@ def main():
 
     samples = mcmc.mcmc(X, mixture_models, n_iter=200,
                         greedy_n_iter=10, greedy_n_init=2)
+    samples.sort(reverse=True)
     ml_order = samples[0]
     fig, ax = plotting.mcmc_uncert_mat(samples, score_names=bmname)
     fig.show()
