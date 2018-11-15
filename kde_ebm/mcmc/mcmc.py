@@ -61,12 +61,14 @@ def create_bootstrap(X, y):
     boot_y = np.empty(y.shape, dtype='int32')
     idxs = np.arange(y.shape[0])
 
+    #* First guarantee that at least one from each class (y) is included
     #for i in range(2):
     y_u = np.unique(y)
     for i in range(len(y_u)):
         sample = np.random.choice(idxs[y == y_u[i]])
         boot_X[i, :] = X[sample, :]
         boot_y[i] = y[sample]
+    #* Resample at will for the remainder - not stratified by class proportions
     samples = np.random.choice(idxs, size=y.shape[0]-len(y_u))
     boot_X[len(y_u):, :] = X[samples, :]
     boot_y[len(y_u):] = y[samples]
@@ -74,6 +76,30 @@ def create_bootstrap(X, y):
     iqr -= np.nanpercentile(boot_X, 25, axis=0)
     if np.any(iqr == 0):
         return create_bootstrap(X, y)
+    return boot_X, boot_y
+
+def create_bootstrap_stratified(X, y):
+    #if np.bincount(y).shape[0] > 2:
+    #    raise NotImplementedError(('Only binary labels'
+    #                               'are currently supported'))
+    n_particp, n_biomarkers = X.shape
+    boot_X = np.empty(X.shape)
+    boot_y = np.empty(y.shape, dtype='int32')
+    idxs = np.arange(y.shape[0])
+
+    #* Stratified bootstrap: sample same number per class
+    y_u,y_freq = np.unique(y,return_counts=True)
+    for i in range(len(y_u)):
+        j = idxs[y==y_u[i]] # rows of data where y=y_u[i]
+        sample = np.random.choice(j, size=y_freq[i]) # sample, with replacement
+        boot_X[j, :] = X[sample, :]
+        boot_y[j] = y[sample]
+
+    #* Check that interquartile range (for any biomarker) isn't zero
+    iqr = np.nanpercentile(boot_X, 75, axis=0)
+    iqr -= np.nanpercentile(boot_X, 25, axis=0)
+    if np.any(iqr == 0):
+        return create_bootstrap_stratified(X, y)
     return boot_X, boot_y
 
 # def create_bootstrap_fixed(X, y):
@@ -101,6 +127,7 @@ def create_bootstrap(X, y):
 #     return boot_X, boot_y
 
 
+#* Added by Neil Oxtoby, September 2018 - return the mixtures
 def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
                   kde_flag=True,
@@ -109,7 +136,7 @@ def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
     mixtures_ = []
     for i in range(n_bootstrap):
         print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
-        boot_X, boot_y = create_bootstrap(X, y)
+        boot_X, boot_y = create_bootstrap_stratified(X, y)
         # Choose which MM to use
         if kde_flag:
             mixtures = fit_all_kde_models(boot_X, boot_y)
@@ -117,7 +144,9 @@ def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             mixtures = fit_all_gmm_models(boot_X, boot_y)
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
                             plot=False, **kwargs)
-        bootstrap_samples += mcmc_samples
+        #bootstrap_samples += mcmc_samples
+        bootstrap_samples.append(mcmc_samples)
+        mixtures_.append(mixtures)
         if plot:
             fig, ax = mixture_model_grid(boot_X, boot_y,
                                          mixtures, score_names)
@@ -126,18 +155,18 @@ def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             fig, ax = mcmc_trace(mcmc_samples)
             fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
             fig.close()
-        mixtures_.append(mixtures)
     return mixtures_, bootstrap_samples
 
-#* Added by Neil Oxtoby, September 2018 - return the mixtures
 def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
                   kde_flag=True,
+                  return_mixtures=False,
                   **kwargs):
     bootstrap_samples = []
+    mixtures_ = []
     for i in range(n_bootstrap):
         print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
-        boot_X, boot_y = create_bootstrap(X, y)
+        boot_X, boot_y = create_bootstrap_stratified(X, y)
         # Choose which MM to use
         if kde_flag:
             mixtures = fit_all_kde_models(boot_X, boot_y)
@@ -145,7 +174,9 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             mixtures = fit_all_gmm_models(boot_X, boot_y)
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
                             plot=False, **kwargs)
-        bootstrap_samples += mcmc_samples
+        #bootstrap_samples += mcmc_samples
+        bootstrap_samples.append(mcmc_samples)
+        mixtures_.append(mixtures)
         if plot:
             fig, ax = mixture_model_grid(boot_X, boot_y,
                                          mixtures, score_names)
@@ -154,7 +185,10 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             fig, ax = mcmc_trace(mcmc_samples)
             fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
             fig.close()
-    return bootstrap_samples
+    if return_mixtures:
+        return mixtures_, bootstrap_samples
+    else:
+        return bootstrap_samples
 
 #* Added by Neil Oxtoby, June 2018 - bootstrapping of the sequence only, not the MM
 def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
@@ -164,7 +198,7 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                           **kwargs):
     bootstrap_samples = []
     for i in range(n_bootstrap):
-        boot_X, boot_y = create_bootstrap(X, y)
+        boot_X, boot_y = create_bootstrap_stratified(X, y)
         if isinstance(mix_mod,bool):
             print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
             if kde_flag:
@@ -176,7 +210,8 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             mixtures = mix_mod
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
                             plot=False, **kwargs)
-        bootstrap_samples += mcmc_samples
+        #bootstrap_samples += mcmc_samples
+        bootstrap_samples.append(mcmc_samples)
         if(plot):
             fig, ax = mixture_model_grid(boot_X, boot_y,
                                          mixtures, score_names)
@@ -186,12 +221,13 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
             fig.close()
     return bootstrap_samples
+    
 
 def parallel_bootstrap(X, y, n_bootstrap=50,
                         n_processes=-1):
     bootstrap_samples = []
     for i in range(n_bootstrap):
-        bootstrap_samples.append(create_bootstrap(X, y))
+        bootstrap_samples.append(create_bootstrap_stratified(X, y))
     if n_processes == -1:
         n_processes = cpu_count()
     pool = Pool(processes=n_processes)
