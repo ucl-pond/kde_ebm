@@ -27,4 +27,4 @@ The code depends heavily on NumPy, uses SciPy to calculate some stats and do som
 
 Contributing
 ============
-Please read the [CONTRIBUTING.md](https://github.com/ucl-mig/Python-EBM/blob/master/CONTRIBUTING.md) file before making any contributions.
+Please read the [CONTRIBUTING.md](https://github.com/ucl-pond/kde_ebm/blob/master/CONTRIBUTING.md) file before making any contributions.
