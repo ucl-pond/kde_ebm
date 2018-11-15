@@ -12,9 +12,9 @@ Important Links
 
 EBM Papers
 ----------
-- [Young *et al*, Brain, **2014**](http://brain.oxfordjournals.org/cgi/pmidlookup?view=long&pmid=25012224)
-- [Fonteijn *et al*, NeuroImage, **2012**](http://www.sciencedirect.com/science/article/pii/S1053811912000791)
-
+- [Young *et al.*, Brain, **2014**](http://brain.oxfordjournals.org/cgi/pmidlookup?view=long&pmid=25012224)
+- [Fonteijn *et al.*, NeuroImage, **2012**](http://www.sciencedirect.com/science/article/pii/S1053811912000791)
+- [Firth, *et al.*, bioRxiv, **2018**](https://doi.org/10.1101/297978)
 
 
 Dependencies
