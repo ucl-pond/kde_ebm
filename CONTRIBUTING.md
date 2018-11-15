@@ -9,18 +9,18 @@ bit easier.
 How to contribute
 -----------------
 The preferred way to contribute to Python-EBM is to fork the 
-[main repository](https://github.com/ucl-mig/Python-EBM) on
+[main repository](https://github.com/ucl-pond/kde_ebm) on
 GitHub:
 
-1. Fork the [project repository](https://github.com/ucl-mig/Python-EBM):
+1. Fork the [project repository](https://github.com/ucl-pond/kde_ebm):
    click on the 'Fork' button at the top right of the page. This creates
    a copy of the code under your account on the GitHub server.
 
 2. Clone this copy to your local disk:
 
-          $ git clone https://github.com/YourGitHubLogin/Python-EBM.git
+          $ git clone https://github.com/YourGitHubLogin/kde_ebm.git
           [enter username and password as requested]
-          $ cd Python-EBM
+          $ cd kde_ebm
 
 3. Create a branch to hold your changes:
 
