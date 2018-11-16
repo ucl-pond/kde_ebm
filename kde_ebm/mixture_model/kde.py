@@ -94,7 +94,11 @@ class KDEMM(object):
         #* Handle missing data
         controls_score[np.isnan(controls_score)] = 0.5
         patholog_score[np.isnan(patholog_score)] = 0.5
-        return controls_score / (controls_score+patholog_score)
+        c = controls_score / (controls_score+patholog_score)
+        if (c==0) or np.isnan(c):
+            return 0.5
+        else:
+            return c
 
     def BIC(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
