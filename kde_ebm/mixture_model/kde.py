@@ -91,6 +91,9 @@ class KDEMM(object):
 
     def probability(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
+        #* Handle missing data
+        controls_score[np.isnan(controls_score)] = 0.5
+        patholog_score[np.isnan(patholog_score)] = 0.5
         return controls_score / (controls_score+patholog_score)
 
     def BIC(self, X):
