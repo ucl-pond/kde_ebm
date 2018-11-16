@@ -33,9 +33,13 @@ class KDEMM(object):
             patholog_kde.fit(kde_values[kde_labels == 1])
 
             controls_score = controls_kde.score_samples(kde_values)
-            controls_score = np.exp(controls_score)*mixture
-
             patholog_score = patholog_kde.score_samples(kde_values)
+
+            #* Missing data
+            controls_score[np.isnan(controls_score)] = 0.5
+            patholog_score[np.isnan(patholog_score)] = 0.5
+
+            controls_score = np.exp(controls_score)*mixture
             patholog_score = np.exp(patholog_score)*(1-mixture)
 
             ratio = controls_score / (controls_score + patholog_score)
