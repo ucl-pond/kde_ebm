@@ -6,7 +6,7 @@ The Event-Based Model (EBM) is a simple, robust model for the estimation of the 
 Important Links
 ===============
 
-- [Issue tracker](https://github.com/ucl-mig/Python-EBM/issues)
+- [Issue tracker](https://github.com/ucl-pond/kde_ebm/issues)
 
 KDE EBM paper
 -------------
