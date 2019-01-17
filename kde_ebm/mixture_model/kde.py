@@ -94,11 +94,11 @@ class KDEMM(object):
         #* Handle missing data
         controls_score[np.isnan(controls_score)] = 0.5
         patholog_score[np.isnan(patholog_score)] = 0.5
+        controls_score[controls_score==0] = 0.5
+        patholog_score[patholog_score==0] = 0.5
         c = controls_score / (controls_score+patholog_score)
-        if (c==0) or np.isnan(c):
-            return 0.5
-        else:
-            return c
+        #c[(controls_score+patholog_score)==0] = 0.5
+        return c
 
     def BIC(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
@@ -109,11 +109,12 @@ class KDEMM(object):
 
 def hscott(x, weights=None):
 
-    IQR = np.percentile(x, 75) - np.percentile(x, 25)
-    A = min(np.std(x, ddof=1), IQR / 1.349)
+    IQR = np.nanpercentile(x, 75) - np.nanpercentile(x, 25)
+    A = min(np.nanstd(x, ddof=1), IQR / 1.349)
 
     if weights is None:
         weights = np.ones(len(x))
-    n = float(sum(weights))
+    n = float(np.nansum(weights))
+    #n = n/sum(~np.isnan(x))
 
     return 1.059 * A * n ** (-0.2)
