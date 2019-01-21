@@ -17,10 +17,12 @@ class KDEMM(object):
     def fit(self, X, y):
         sorted_idx = X.argsort(axis=0).flatten()
         kde_values = X.copy()[sorted_idx].reshape(-1,1)
-        kde_labels = y.copy()[sorted_idx]
+        kde_labels0 = y.copy()[sorted_idx]
+        kde_labels = kde_labels0
 
         bin_counts = np.bincount(y).astype(float)
-        mixture = 0.5
+        mixture0 = sum(kde_labels==0)/len(kde_labels) # Prior of being a control
+        mixture = mixture0
         old_ratios = np.zeros(kde_labels.shape)
         iter_count = 0
         if(self.bandwidth is None):
@@ -59,19 +61,22 @@ class KDEMM(object):
 
             controls_score = controls_kde.predict(kde_values)
             patholog_score = patholog_kde.predict(kde_values)
-            #* Missing data - need to test this
-            controls_score[np.isnan(controls_score)] = 0.5
-            patholog_score[np.isnan(patholog_score)] = 0.5
+            
             controls_score = controls_score*mixture
             patholog_score = patholog_score*(1-mixture)
 
             ratio = controls_score / (controls_score + patholog_score)
+            #* Missing data - need to test this
+            ratio[np.isnan(ratio)] = 0.5
+            
             if(np.all(ratio == old_ratios)):
                 break
             iter_count += 1
             old_ratios = ratio
-            kde_labels = ratio < 0.5
-
+            kde_labels = ratio < 0.49
+            #kde_labels[ratio < 0.49] = 1
+            #kde_labels[ratio > 0.51] = 0
+            
             diff_y = np.hstack(([0], np.diff(kde_labels)))
             if (np.sum(diff_y != 0) == 2 and
                     np.unique(kde_labels).shape[0] == 2):
@@ -88,10 +93,13 @@ class KDEMM(object):
                     replace_idxs = np.arange(kde_values.shape[0])[:sizes[0]]
 
                 kde_labels[replace_idxs] = (split_y+1) % 2
+            
+            #* Don't allow non-carrier labels to swap: clean control group
+            kde_labels[kde_labels0==0] = 0
 
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
-            if(mixture < 0.10 or mixture > 0.90):
+            if(mixture < 0.10 or mixture > 0.90): # if(mixture < (0.90*mixture0) or mixture > 0.90):
                 break
         self.controls_kde = controls_kde
         self.patholog_kde = patholog_kde
