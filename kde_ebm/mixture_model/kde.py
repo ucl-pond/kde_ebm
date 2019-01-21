@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn import neighbors
-
+from awkde import GaussianKDE # from scipy import stats
 
 class KDEMM(object):
     """docstring for KDEMM"""
@@ -12,6 +12,7 @@ class KDEMM(object):
         self.controls_kde = None
         self.patholog_kde = None
         self.mixture = None
+        self.alpha = 0.5 # sensitivity parameter: 0...1
 
     def fit(self, X, y):
         sorted_idx = X.argsort(axis=0).flatten()
@@ -23,24 +24,46 @@ class KDEMM(object):
         old_ratios = np.zeros(kde_labels.shape)
         iter_count = 0
         if(self.bandwidth is None):
+            #* 1. Rule of thumb
             self.bandwidth = hscott(X)
+            # #* 2. Estimate full density to inform variable bandwidth: wide in tails, narrow in peaks
+            # all_kde = neighbors.KernelDensity(kernel=self.kernel,
+            #                                   bandwidth=self.bandwidth)
+            # all_kde.fit(kde_values)
+            # f = np.exp(all_kde.score_samples(kde_values))
+            # #* 3. Local, a.k.a. variable, bandwidth given by eq. 3 of https://ieeexplore.ieee.org/abstract/document/7761150
+            # g = stats.mstats.gmean(f)
+            # alpha = 0.5 # sensitivity parameter: 0...1
+            # lamb = np.power(f/g,-alpha)
         for i in range(self.n_iters):
-            controls_kde = neighbors.KernelDensity(kernel=self.kernel,
-                                                   bandwidth=self.bandwidth)
-            patholog_kde = neighbors.KernelDensity(kernel=self.kernel,
-                                                   bandwidth=self.bandwidth)
+            # #* Separate bandwidth for each mixture component, recalculated each loop
+            # bw_controls = self.bandwidth # hscott(kde_values[kde_labels == 0])
+            # bw_patholog = self.bandwidth # hscott(kde_values[kde_labels == 1])
+            # controls_kde = neighbors.KernelDensity(kernel=self.kernel,
+            #                                        bandwidth=bw_controls)
+            # patholog_kde = neighbors.KernelDensity(kernel=self.kernel,
+            #                                        bandwidth=bw_patholog)
+            # controls_kde.fit(kde_values[kde_labels == 0])
+            # # patholog_kde.fit(kde_values[kde_labels == 1])
+            # controls_score = controls_kde.score_samples(kde_values)
+            # patholog_score = patholog_kde.score_samples(kde_values)
+            # #* Missing data - 50/50 likelihood
+            # controls_score[np.isnan(controls_score)] = np.log(0.5)
+            # patholog_score[np.isnan(patholog_score)] = np.log(0.5)
+
+            #* Automatic variable/local bandwidth
+            controls_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
+            patholog_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
             controls_kde.fit(kde_values[kde_labels == 0])
             patholog_kde.fit(kde_values[kde_labels == 1])
 
-            controls_score = controls_kde.score_samples(kde_values)
-            patholog_score = patholog_kde.score_samples(kde_values)
-
-            #* Missing data
+            controls_score = controls_kde.predict(kde_values)
+            patholog_score = patholog_kde.predict(kde_values)
+            #* Missing data - need to test this
             controls_score[np.isnan(controls_score)] = 0.5
             patholog_score[np.isnan(patholog_score)] = 0.5
-
-            controls_score = np.exp(controls_score)*mixture
-            patholog_score = np.exp(patholog_score)*(1-mixture)
+            controls_score = controls_score*mixture
+            patholog_score = patholog_score*(1-mixture)
 
             ratio = controls_score / (controls_score + patholog_score)
             if(np.all(ratio == old_ratios)):
@@ -83,10 +106,14 @@ class KDEMM(object):
         return -1*np.sum(data_likelihood)
 
     def pdf(self, X, **kwargs):
-        controls_score = self.controls_kde.score_samples(X)
-        controls_score = np.exp(controls_score)*self.mixture
-        patholog_score = self.patholog_kde.score_samples(X)
-        patholog_score = np.exp(patholog_score)*(1-self.mixture)
+        #* Old version: sklearn fixed-bw KDE
+        # controls_score = self.controls_kde.score_samples(X)
+        # controls_score = np.exp(controls_score)*self.mixture
+        # patholog_score = self.patholog_kde.score_samples(X)
+        # patholog_score = np.exp(patholog_score)*(1-self.mixture)
+        #* Auto-Variable-bw KDE: awkde
+        controls_score = self.controls_kde.predict(X)*self.mixture
+        patholog_score = self.patholog_kde.predict(X)*(1-self.mixture)
         return controls_score, patholog_score
 
     def probability(self, X):
