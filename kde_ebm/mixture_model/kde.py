@@ -16,7 +16,8 @@ class KDEMM(object):
     def fit(self, X, y):
         sorted_idx = X.argsort(axis=0).flatten()
         kde_values = X.copy()[sorted_idx].reshape(-1,1)
-        kde_labels = y.copy()[sorted_idx]
+        kde_labels0 = y.copy()[sorted_idx]
+        kde_labels = kde_labels0
 
         bin_counts = np.bincount(y).astype(float)
         mixture = 0.5
@@ -35,14 +36,13 @@ class KDEMM(object):
             controls_score = controls_kde.score_samples(kde_values)
             patholog_score = patholog_kde.score_samples(kde_values)
 
-            #* Missing data
-            controls_score[np.isnan(controls_score)] = 0.5
-            patholog_score[np.isnan(patholog_score)] = 0.5
-
             controls_score = np.exp(controls_score)*mixture
             patholog_score = np.exp(patholog_score)*(1-mixture)
 
             ratio = controls_score / (controls_score + patholog_score)
+            #* Missing data
+            ratio[np.isnan(ratio)] = 0.5
+            
             if(np.all(ratio == old_ratios)):
                 break
             iter_count += 1
@@ -65,6 +65,9 @@ class KDEMM(object):
                     replace_idxs = np.arange(kde_values.shape[0])[:sizes[0]]
 
                 kde_labels[replace_idxs] = (split_y+1) % 2
+
+            #* Disallow controls labels to swap - applicable to familial diseases
+            kde_labels[kde_labels0==0] = 0
 
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
