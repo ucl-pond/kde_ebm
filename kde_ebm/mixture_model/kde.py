@@ -12,14 +12,17 @@ class KDEMM(object):
         self.controls_kde = None
         self.patholog_kde = None
         self.mixture = None
-        self.alpha = 0.5 # sensitivity parameter: 0...1
+        self.alpha = 0.3 # sensitivity parameter: 0...1
 
     def fit(self, X, y):
         sorted_idx = X.argsort(axis=0).flatten()
         kde_values = X.copy()[sorted_idx].reshape(-1,1)
         kde_labels0 = y.copy()[sorted_idx]
         kde_labels = kde_labels0
-
+        
+        #print('Original labels')
+        #print(kde_labels.astype(int))
+        
         bin_counts = np.bincount(y).astype(float)
         mixture0 = sum(kde_labels==0)/len(kde_labels) # Prior of being a control
         mixture = mixture0
@@ -66,36 +69,84 @@ class KDEMM(object):
             patholog_score = patholog_score*(1-mixture)
 
             ratio = controls_score / (controls_score + patholog_score)
-            #* Missing data - need to test this
-            ratio[np.isnan(ratio)] = 0.5
+            
+            #* Empirical distribution
+            cdf_controls = np.cumsum(controls_score)/max(np.cumsum(controls_score))
+            cdf_patholog = np.cumsum(patholog_score)/max(np.cumsum(patholog_score))
+            cdf_diff = (cdf_patholog - cdf_controls)/(cdf_patholog + cdf_controls)
+            disease_direction = -np.sign(np.mean(cdf_diff))
+            if disease_direction > 0:
+                cdf_direction = 1 + cdf_diff
+            else:
+                cdf_direction = -cdf_diff
+            
+            #* Missing data - need to test this (probably need to remove/impute missing data at the start)
+            #ratio[np.isnan(ratio) & (kde_labels0==0)] = 1-cdf_direction[np.isnan(ratio) & (kde_labels0==0)]
+            #ratio[np.isnan(ratio) & (kde_labels0==1)] = cdf_direction[np.isnan(ratio) & (kde_labels0==1)]
+            #ratio[np.isnan(ratio)] = 0.5
             
             if(np.all(ratio == old_ratios)):
                 break
             iter_count += 1
             old_ratios = ratio
-            kde_labels = ratio < 0.49
-            #kde_labels[ratio < 0.49] = 1
-            #kde_labels[ratio > 0.51] = 0
+            kde_labels = ratio < 0.5
             
-            diff_y = np.hstack(([0], np.diff(kde_labels)))
-            if (np.sum(diff_y != 0) == 2 and
-                    np.unique(kde_labels).shape[0] == 2):
-                split_y = int(np.all(np.diff(np.where(kde_labels == 0)) == 1))
+            #* Labels to swap: 
+            diff_y = np.hstack(([0], np.diff(kde_labels))) # !=0 where adjacent labels differ
+            if (np.sum(diff_y != 0) >= 2 and 
+                    np.unique(kde_labels).shape[0] == 2): 
+                split_y = int(np.all(np.diff(np.where(kde_labels == 0)) == 1)) # 0 if all 0s are adjacent => always 1?
                 sizes = [x.shape[0] for x in
-                         np.split(diff_y, np.where(diff_y != 0)[0])]
+                         np.split(diff_y, np.where(diff_y != 0)[0])] # lengths of each contiguous set of labels
+                
+                #* Identify which labels to swap using direction of abnormality: mean(KDE components)
                 split_prior_smaller = (np.mean(kde_values[kde_labels ==
                                                           split_y])
                                        < np.mean(kde_values[kde_labels ==
                                                             (split_y+1) % 2]))
                 if split_prior_smaller:
-                    replace_idxs = np.arange(kde_values.shape[0])[-sizes[2]:]
+                    replace_idxs = np.arange(kde_values.shape[0])[-sizes[2]:] # greater values are swapped
+                    #print('Labels swapped for greater values')
                 else:
-                    replace_idxs = np.arange(kde_values.shape[0])[:sizes[0]]
-
-                kde_labels[replace_idxs] = (split_y+1) % 2
+                    replace_idxs = np.arange(kde_values.shape[0])[:sizes[0]] # lesser values are swapped
+                    #print('Labels swapped for lesser values')
+                #print(kde_labels.astype(int))
+                kde_labels[replace_idxs] = (split_y+1) % 2 # swaps labels
+                #print(kde_labels.astype(int))
+                
+            #*** Prevent label swapping for "strong controls"
+            #print('Maintaining labels for strong controls')
+            #print(kde_labels.astype(int))
+            fixed_controls_criteria_0 = (kde_labels0==0) # Controls 
             
-            #* Don't allow non-carrier labels to swap: clean control group
-            kde_labels[kde_labels0==0] = 0
+            #* CDF criteria - do not delete: also used for disease direction
+            en = 10
+            cdf_threshold = (en-1)/(en+1) # cdf(p) = en*(1-cdf(c)), i.e., en-times more patients than remaining controls
+            controls_tail = cdf_direction > (cdf_threshold * max(cdf_direction))
+            #fixed_controls_criteria = fixed_controls_criteria_0 & (~controls_tail)
+            
+            #* PDF ratio criteria
+            # ratio_threshold_strong_controls = 0.33 # P(control) / [P(control) + P(patient)]
+            #fixed_controls_criteria = fixed_controls_criteria & (ratio > ratio_threshold_strong_controls) # "Strong controls" 
+            
+            #* Outlier criteria: quantiles
+            q = 0.9 # x-tiles
+            if disease_direction>0:
+                q = q # upper 
+                f = np.greater
+                #print('Disease direction: positive')
+            else:
+                q = 1 - q # lower
+                f = np.less
+                #print('Disease direction: negative')
+            controls_outliers = f(kde_values,np.quantile(kde_values,q))
+            fixed_controls_criteria = fixed_controls_criteria_0.reshape(-1,1) & (~controls_outliers.reshape(-1,1))
+
+            kde_labels[np.where(fixed_controls_criteria)[0]] = 0
+            
+            #* Hack alert! Also force the carriers to flip
+            # controllike_pathologs_criteria = (~controls_outliers.reshape(-1,1))
+            # kde_labels[np.where(controllike_pathologs_criteria)[0]] = 0
 
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()

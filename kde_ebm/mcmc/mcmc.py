@@ -87,12 +87,27 @@ def create_bootstrap_stratified(X, y):
     boot_y = np.empty(y.shape, dtype='int32')
     idxs = np.arange(y.shape[0])
 
+    #* Restrict to those having sufficiently-complete (minimal missing) data
+    # => problem: biases towards the others.
+
+    #* Impute missing data with median values for the class
+    x_median_y0 = np.tile(np.nanmedian(X[y==0,],axis=0),(sum(y==0),1))
+    x_median_y1 = np.tile(np.nanmedian(X[y==1,],axis=0),(sum(y==1),1))
+    X_median = np.empty(X.shape)
+    X_median[y==0,] = x_median_y0
+    X_median[y==1,] = x_median_y1
+    X_imputed = X.copy()
+    (a,b) = np.where(np.isnan(X))
+    for j,k in zip(a,b):
+        X_imputed[j,k] = X_median[j,k]
+    X_sample_from_me = X_imputed.copy()
+
     #* Stratified bootstrap: sample same number per class
     y_u,y_freq = np.unique(y,return_counts=True)
     for i in range(len(y_u)):
         j = idxs[y==y_u[i]] # rows of data where y=y_u[i]
         sample = np.random.choice(j, size=y_freq[i]) # sample, with replacement
-        boot_X[j, :] = X[sample, :]
+        boot_X[j, :] = X_sample_from_me[sample, :]
         boot_y[j] = y[sample]
 
     #* Check that interquartile range (for any biomarker) isn't zero

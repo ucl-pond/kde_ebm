@@ -67,6 +67,11 @@ def fit_all_kde_models(X, y):
         bio_X = X[:, i]
         bio_y = y[~np.isnan(bio_X)]
         bio_X = bio_X[~np.isnan(bio_X)]
+        # print('utils:fit_all_kde_models() \n  - range(np.isnan(bio_X[y=0/1])) = [{0},{1}],[{2},{3}]'.format(
+        #     min((bio_X[bio_y==0])),max((bio_X[bio_y==0])),
+        #     min((bio_X[bio_y==1])),max((bio_X[bio_y==1]))
+        #     )
+        # )
         kde = KDEMM()
         kde.fit(bio_X, bio_y)
         kde_mixtures.append(kde)
