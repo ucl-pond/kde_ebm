@@ -67,7 +67,7 @@ class KDEMM(object):
                 kde_labels[replace_idxs] = (split_y+1) % 2
 
             #* Disallow controls labels to swap - applicable to familial diseases
-            kde_labels[kde_labels0==0] = 0
+            # kde_labels[kde_labels0==0] = 0
 
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
