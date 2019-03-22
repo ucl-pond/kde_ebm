@@ -95,7 +95,7 @@ def bootstrap_ebm(X, y, n_bootstrap=50, n_mcmc_iter=100000,
     return bootstrap_samples
 
 
-def parallell_bootstrap(X, y, n_bootstrap=50,
+def parallel_bootstrap(X, y, n_bootstrap=50,
                         n_processes=-1):
     bootstrap_samples = []
     for i in range(n_bootstrap):
@@ -103,7 +103,7 @@ def parallell_bootstrap(X, y, n_bootstrap=50,
     if n_processes == -1:
         n_processes = cpu_count()
     pool = Pool(processes=n_processes)
-    mcmc_samples = pool.map(parallell_bootstrap_, bootstrap_samples)
+    mcmc_samples = pool.map(parallel_bootstrap_, bootstrap_samples)
     samples_formatted = []
     for i in range(n_bootstrap):
         samples_formatted += mcmc_samples[0]
@@ -111,7 +111,7 @@ def parallell_bootstrap(X, y, n_bootstrap=50,
     return samples_formatted
 
 
-def parallell_bootstrap_(Xy):
+def parallel_bootstrap_(Xy):
     boot_X, boot_y = Xy
     kde_mixtures = fit_all_kde_models(boot_X, boot_y)
     mcmc_samples = mcmc(boot_X, kde_mixtures, plot=False)
