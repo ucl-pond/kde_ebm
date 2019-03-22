@@ -36,7 +36,7 @@ def get_prob_mat(X, mixture_models):
     return prob_mat
 
 
-def fit_all_gmm_models(X, y):
+def fit_all_gmm_models(X, y, implement_fixed_controls=False):
     #* Extract only the first two diagnoses
     msk = np.where(y<2)[0]
     X = X[msk]
@@ -55,7 +55,7 @@ def fit_all_gmm_models(X, y):
     return mixture_models
 
 
-def fit_all_kde_models(X, y):
+def fit_all_kde_models(X, y, implement_fixed_controls=False):
     #* Extract only the first two diagnoses
     msk = np.where(y<2)[0]
     X = X[msk]
@@ -73,6 +73,6 @@ def fit_all_kde_models(X, y):
         #     )
         # )
         kde = KDEMM()
-        kde.fit(bio_X, bio_y)
+        kde.fit(bio_X, bio_y,implement_fixed_controls)
         kde_mixtures.append(kde)
     return kde_mixtures
