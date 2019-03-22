@@ -14,7 +14,7 @@ class KDEMM(object):
         self.mixture = None
         self.alpha = 0.3 # sensitivity parameter: 0...1
 
-    def fit(self, X, y):
+    def fit(self, X, y, implement_fixed_controls=False):
         sorted_idx = X.argsort(axis=0).flatten()
         kde_values = X.copy()[sorted_idx].reshape(-1,1)
         kde_labels0 = y.copy()[sorted_idx]
@@ -142,9 +142,10 @@ class KDEMM(object):
             controls_outliers = f(kde_values,np.quantile(kde_values,q))
             fixed_controls_criteria = fixed_controls_criteria_0.reshape(-1,1) & (~controls_outliers.reshape(-1,1))
 
-            kde_labels[np.where(fixed_controls_criteria)[0]] = 0
+            if implement_fixed_controls:
+                kde_labels[np.where(fixed_controls_criteria)[0]] = 0
             
-            #* Hack alert! Also force the carriers to flip
+            #* Hack alert! Also force the patients to flip
             # controllike_pathologs_criteria = (~controls_outliers.reshape(-1,1))
             # kde_labels[np.where(controllike_pathologs_criteria)[0]] = 0
 
