@@ -28,3 +28,16 @@ The code depends heavily on NumPy, uses SciPy to calculate some stats and do som
 Contributing
 ============
 Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file before making any contributions.
+
+Tweaks
+======
+
+Implemented in `variable_bandwidth` and `neils_tweaks` branches
+
+1. Variable bandwidth KDE
+
+   Improved mixture model fitting in low-density areas such as the tail of a skewed distribution
+  
+2. Prioritised controls
+
+   Option for the controls to be 'fixed', i.e., very unlikely to be relabelled as 'abnormal' in the mixture model

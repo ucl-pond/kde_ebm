@@ -8,7 +8,7 @@ bit easier.
 
 How to contribute
 -----------------
-The preferred way to contribute to Python-EBM is to fork the 
+The preferred way to contribute to this package is to **fork** the 
 [main repository](https://github.com/ucl-pond/kde_ebm) on
 GitHub:
 
@@ -22,11 +22,11 @@ GitHub:
           [enter username and password as requested]
           $ cd kde_ebm
 
-3. Create a branch to hold your changes:
+3. **Create a branch** to hold your changes:
 
           $ git checkout -b my-feature
 
-   and start making changes. Never work in the ``master`` branch!
+   and start making changes. **Never work in the ``master`` branch!**
 
 4. Work on this copy on your computer using Git to do the version
    control. When you're done editing, do:
