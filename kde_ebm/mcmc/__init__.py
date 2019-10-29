@@ -8,3 +8,5 @@ from .utils import enumerate_all
 
 from .mcmc import bootstrap_ebm_fixedMM
 from .mcmc import bootstrap_ebm_return_mixtures
+
+from .mcmc import mcmc_pz

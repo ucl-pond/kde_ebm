@@ -51,6 +51,59 @@ def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
     mcmc_samples.sort(reverse=True)
     return mcmc_samples
 
+#* Added by Neil Oxtoby for z-score EBM
+def get_prob_mat_z(Z):
+    """
+    P(event) = sigmoidal function of z-score,
+               inflecting at z==1,
+               width of approximately 2 (starts at z=0, saturates at z=2)
+    
+    Assumes the following has already happened, and that z increases with disease progression
+    
+    z = x[y==1,]
+    mu = np.tile(np.nanmean(z,axis=0),(z.shape[0],1))
+    sig = np.tile(np.nanstd(z,axis=0),(z.shape[0],1))
+    z = (z - mu)/sig
+    z = z*np.tile(multiplier,(z.shape[0],1))
+    
+    Neil Oxtoby, July
+    """
+    #***
+    def sigmoid(Z,loc=1,width=2):
+        sigm = 1./(1 + 1*np.exp(-(Z-loc)/(width/10)))
+        return sigm
+    p_event = np.zeros(shape=Z.shape)
+    for k in range(Z.shape[1]):
+        p_event[:,k] = sigmoid(Z[:,k])
+    return p_event
+
+def mcmc_pz(prob_mat, n_iter=10000, greedy_n_iter=1000,
+         greedy_n_init=10, plot=True):
+    greedy_dict = greedy_ascent_creation(prob_mat,
+                                         greedy_n_iter,
+                                         greedy_n_init)
+    if plot:
+        fig, ax = greedy_ascent_trace(greedy_dict)
+        fig.show()
+    current_order = greedy_dict[0][-1]
+    for i in range(1, greedy_n_init):
+        new_order = greedy_dict[i][-1]
+        if new_order > current_order:
+            current_order = new_order
+    mcmc_samples = [current_order]
+    for i in range(1, n_iter):
+        new_order = current_order.swap_events()
+        new_order.score_ordering(prob_mat)
+        if new_order - current_order > 100:
+            ratio = 1
+        else:
+            ratio = np.exp(new_order - current_order)
+        if ratio > np.random.random():
+            current_order = new_order
+        mcmc_samples.append(current_order)
+    mcmc_samples.sort(reverse=True)
+    return mcmc_samples
+
 
 def create_bootstrap(X, y):
     #if np.bincount(y).shape[0] > 2:
@@ -146,6 +199,7 @@ def create_bootstrap_stratified(X, y):
 def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
                   kde_flag=True,
+                  implement_fixed_controls=True,
                   **kwargs):
     bootstrap_samples = []
     mixtures_ = []
@@ -154,9 +208,9 @@ def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
         boot_X, boot_y = create_bootstrap_stratified(X, y)
         # Choose which MM to use
         if kde_flag:
-            mixtures = fit_all_kde_models(boot_X, boot_y)
+            mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         else:
-            mixtures = fit_all_gmm_models(boot_X, boot_y)
+            mixtures = fit_all_gmm_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
                             plot=False, **kwargs)
         #bootstrap_samples += mcmc_samples
@@ -176,6 +230,7 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
                   kde_flag=True,
                   return_mixtures=False,
+                  implement_fixed_controls=True,
                   **kwargs):
     bootstrap_samples = []
     mixtures_ = []
@@ -184,9 +239,9 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
         boot_X, boot_y = create_bootstrap_stratified(X, y)
         # Choose which MM to use
         if kde_flag:
-            mixtures = fit_all_kde_models(boot_X, boot_y)
+            mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         else:
-            mixtures = fit_all_gmm_models(boot_X, boot_y)
+            mixtures = fit_all_gmm_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
                             plot=False, **kwargs)
         #bootstrap_samples += mcmc_samples
@@ -210,6 +265,7 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                           score_names=None, plot=False, 
                           kde_flag=True,
                           mix_mod=False,
+                          implement_fixed_controls=True,
                           **kwargs):
     bootstrap_samples = []
     for i in range(n_bootstrap):
@@ -217,9 +273,9 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
         if isinstance(mix_mod,bool):
             print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
             if kde_flag:
-                mixtures = fit_all_kde_models(boot_X, boot_y)
+                mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
             else:
-                mixtures = fit_all_gmm_models(boot_X, boot_y)
+                mixtures = fit_all_gmm_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         else:
             print('Bootstrap {0} of {1}: not refitting KDE mixtures'.format(i+1,n_bootstrap))
             mixtures = mix_mod
@@ -254,11 +310,11 @@ def parallel_bootstrap(X, y, n_bootstrap=50,
     return samples_formatted
 
 
-def parallel_bootstrap_(Xy, kde_flag=True):
+def parallel_bootstrap_(Xy, kde_flag=True, implement_fixed_controls=True):
     boot_X, boot_y = Xy
     if kde_flag:
-        mixtures = fit_all_kde_models(boot_X, boot_y)
+        mixtures = fit_all_kde_models(boot_X, boot_y, implement_fixed_controls=implement_fixed_controls)
     else:
-        mixtures = fit_all_gmm_models(boot_X, boot_y)
+        mixtures = fit_all_gmm_models(boot_X, boot_y, implement_fixed_controls=implement_fixed_controls)
     mcmc_samples = mcmc(boot_X, mixtures, plot=False)
     return mcmc_samples

@@ -58,9 +58,11 @@ class EventOrder(object):
         # Maximum-Likelihood stage
         stages = np.argmax(stage_likelihoods, axis=1)
         # Weighted-average stage: weighted by stage likelihood
-        stages_weighted_avg = np.average(np.tile(np.arange(0,n_biomarkers+1),(n_particp,1)), 
-                                         axis=1, 
-                                         weights=stage_likelihoods)
+        #stage_likelihoods_max = np.tile(np.max(stage_likelihoods,axis=1).reshape(-1,1),(1,stage_likelihoods.shape[1]))
+        #weights = stage_likelihoods / stage_likelihoods_max
+        #stages_weighted_avg = np.average(np.tile(np.arange(0,n_biomarkers+1),(n_particp,1)),
+        #                                 axis=1,
+        #                                 weights=weights)
         return stages, stage_likelihoods
 
     def swap_events(self):
