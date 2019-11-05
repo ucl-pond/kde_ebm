@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn import neighbors
-from awkde import GaussianKDE # from scipy import stats
+from awkde import GaussianKDE 
+# from scipy import stats
 
 class KDEMM(object):
     """docstring for KDEMM"""
@@ -56,9 +57,11 @@ class KDEMM(object):
             # controls_score[np.isnan(controls_score)] = np.log(0.5)
             # patholog_score[np.isnan(patholog_score)] = np.log(0.5)
 
-            #* Automatic variable/local bandwidth
+            #* Automatic variable/local bandwidth: awkde package from github
             controls_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
             patholog_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
+            # controls_kde = GaussianKDE(glob_bw="scott", alpha=0.1, diag_cov=False)
+            # patholog_kde = GaussianKDE(glob_bw="scott", alpha=0.1, diag_cov=False)
             controls_kde.fit(kde_values[kde_labels == 0])
             patholog_kde.fit(kde_values[kde_labels == 1])
 
@@ -123,21 +126,23 @@ class KDEMM(object):
             en = 10
             cdf_threshold = (en-1)/(en+1) # cdf(p) = en*(1-cdf(c)), i.e., en-times more patients than remaining controls
             controls_tail = cdf_direction > (cdf_threshold * max(cdf_direction))
-            #fixed_controls_criteria = fixed_controls_criteria_0 & (~controls_tail)
+            #fixed_controls_criteria_0 = fixed_controls_criteria_0 & (~controls_tail)
             
             #* PDF ratio criteria
             # ratio_threshold_strong_controls = 0.33 # P(control) / [P(control) + P(patient)]
             #fixed_controls_criteria = fixed_controls_criteria & (ratio > ratio_threshold_strong_controls) # "Strong controls" 
             
-            #* Outlier criteria: quantiles
+            #* Outlier criteria for weak controls: quantiles
             q = 0.9 # x-tiles
             if disease_direction>0:
                 q = q # upper 
                 f = np.greater
+                g = np.less
                 #print('Disease direction: positive')
             else:
                 q = 1 - q # lower
                 f = np.less
+                g = np.greater
                 #print('Disease direction: negative')
             controls_outliers = f(kde_values,np.quantile(kde_values,q))
             fixed_controls_criteria = fixed_controls_criteria_0.reshape(-1,1) & (~controls_outliers.reshape(-1,1))
@@ -145,8 +150,10 @@ class KDEMM(object):
             if implement_fixed_controls:
                 kde_labels[np.where(fixed_controls_criteria)[0]] = 0
             
-            #* Hack alert! Also force the patients to flip
-            # controllike_pathologs_criteria = (~controls_outliers.reshape(-1,1))
+            #* Experimental: force pre-event/healthy-looking patients to flip
+            # pathologs_outliers = g(kde_values,np.quantile(kde_values,1-q))
+            # controllike_pathologs_criteria = (pathologs_outliers.reshape(-1,1))
+            # # controllike_pathologs_criteria = (~controls_outliers.reshape(-1,1))
             # kde_labels[np.where(controllike_pathologs_criteria)[0]] = 0
 
             bin_counts = np.bincount(kde_labels).astype(float)
