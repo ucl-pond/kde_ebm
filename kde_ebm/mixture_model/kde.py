@@ -15,7 +15,20 @@ class KDEMM(object):
         self.mixture = None
         self.alpha = 0.3 # sensitivity parameter: 0...1
 
-    def fit(self, X, y, implement_fixed_controls=False):
+    def fit(self, X, y, implement_fixed_controls=False, patholog_dirn=None):
+        #* Requires direction of disease progression as input
+        if patholog_dirn is None:
+            patholog_dirn = disease_direction(X,y)
+        
+        ####### Diagnostic
+        if patholog_dirn < 0:
+            print('kde.py DIAGNOSTIC: fit(), Disease progresses with decreasing biomarker values - ')
+        elif patholog_dirn > 0:
+            print('kde.py DIAGNOSTIC: fit(), Disease progresses with increasing biomarker values + ')
+        else:
+            print('kde.py DIAGNOSTIC. fit(), ERROR: Disease direction in fit(...,patholog_dirn) must be either positive or negative. \n patholog_dirn = {0]}'.format(patholog_dirn))
+        #######
+        
         sorted_idx = X.argsort(axis=0).flatten()
         kde_values = X.copy()[sorted_idx].reshape(-1,1)
         kde_labels0 = y.copy()[sorted_idx]
@@ -42,7 +55,7 @@ class KDEMM(object):
             # alpha = 0.5 # sensitivity parameter: 0...1
             # lamb = np.power(f/g,-alpha)
         for i in range(self.n_iters):
-            # #* Separate bandwidth for each mixture component, recalculated each loop
+            # #* Manual, different bandwidth for each mixture component, recalculated each loop
             # bw_controls = self.bandwidth # hscott(kde_values[kde_labels == 0])
             # bw_patholog = self.bandwidth # hscott(kde_values[kde_labels == 1])
             # controls_kde = neighbors.KernelDensity(kernel=self.kernel,
@@ -57,7 +70,7 @@ class KDEMM(object):
             # controls_score[np.isnan(controls_score)] = np.log(0.5)
             # patholog_score[np.isnan(patholog_score)] = np.log(0.5)
 
-            #* Automatic variable/local bandwidth: awkde package from github
+            #* Automatic variable/local bandwidth for each component: awkde package from github
             controls_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
             patholog_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
             # controls_kde = GaussianKDE(glob_bw="scott", alpha=0.1, diag_cov=False)
@@ -73,15 +86,25 @@ class KDEMM(object):
 
             ratio = controls_score / (controls_score + patholog_score)
             
-            #* Empirical distribution
+            #* Empirical cumulative distribution: used to swap labels for patients with super-normal values (greater/less than CDF=0.5)
             cdf_controls = np.cumsum(controls_score)/max(np.cumsum(controls_score))
             cdf_patholog = np.cumsum(patholog_score)/max(np.cumsum(patholog_score))
             cdf_diff = (cdf_patholog - cdf_controls)/(cdf_patholog + cdf_controls)
-            disease_direction = -np.sign(np.mean(cdf_diff))
-            if disease_direction > 0:
+            disease_dirn = -np.sign(np.nansum(cdf_diff)) # disease_dirn = -np.sign(np.mean(cdf_diff))
+            if disease_dirn > 0:
                 cdf_direction = 1 + cdf_diff
             else:
                 cdf_direction = -cdf_diff
+            
+            #* Identify "normal" biomarkers as being on the healthy side of the controls median => flip patient labels
+            if patholog_dirn<0:
+                #* More normal (greater) than half the controls: CDF_controls > 0.5
+                labels_forced_normal = cdf_controls > 0.5
+            elif patholog_dirn>0:
+                #* More normal (less)    than half the controls: CDF_controls < 0.5
+                labels_forced_normal = cdf_controls < 0.5
+            #* Implemented below, after label-swapping: kde_labels[np.where(labels_forced_normal)[0]] = 0
+            
             
             #* Missing data - need to test this (probably need to remove/impute missing data at the start)
             #ratio[np.isnan(ratio) & (kde_labels0==0)] = 1-cdf_direction[np.isnan(ratio) & (kde_labels0==0)]
@@ -134,7 +157,7 @@ class KDEMM(object):
             
             #* Outlier criteria for weak controls: quantiles
             q = 0.9 # x-tiles
-            if disease_direction>0:
+            if disease_dirn>0:
                 q = q # upper 
                 f = np.greater
                 g = np.less
@@ -150,12 +173,9 @@ class KDEMM(object):
             if implement_fixed_controls:
                 kde_labels[np.where(fixed_controls_criteria)[0]] = 0
             
-            #* Experimental: force pre-event/healthy-looking patients to flip
-            # pathologs_outliers = g(kde_values,np.quantile(kde_values,1-q))
-            # controllike_pathologs_criteria = (pathologs_outliers.reshape(-1,1))
-            # # controllike_pathologs_criteria = (~controls_outliers.reshape(-1,1))
-            # kde_labels[np.where(controllike_pathologs_criteria)[0]] = 0
-
+            #* Disease direction: force pre-event/healthy-looking patients to flip
+            kde_labels[np.where(labels_forced_normal)[0]] = 0
+            
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
             if(mixture < 0.10 or mixture > 0.90): # if(mixture < (0.90*mixture0) or mixture > 0.90):
@@ -212,3 +232,47 @@ def hscott(x, weights=None):
     #n = n/sum(~np.isnan(x))
 
     return 1.059 * A * n ** (-0.2)
+
+def disease_direction(X,y,label='Biomarker'):
+    """
+    disease_direction(X,y, [label])
+    
+    Estimates disease progression direction by comparing empirical CDFs
+    in controls and patients
+    
+    Author: Neil Oxtoby, November 2019
+    """
+    not_a_number = np.isnan(X) | np.isnan(y)
+    not_a_number = not_a_number | (~np.isin(y,[0,1]))
+    y_ = y[~not_a_number]
+    X_ = X[~not_a_number]
+    sorted_idx = X_.argsort(axis=0)
+    kde_values = X_.copy()[sorted_idx].reshape(-1,1)
+    kde_labels = y_.copy()[sorted_idx]
+    bin_counts = np.bincount(y_).astype(float)
+    mixture = sum(kde_labels==0)/len(kde_labels) # Prior of being a control
+    controls_kde = GaussianKDE(glob_bw="scott", alpha=0.3, diag_cov=False)
+    patholog_kde = GaussianKDE(glob_bw="scott", alpha=0.3, diag_cov=False)
+    controls_kde.fit(kde_values[kde_labels == 0])
+    patholog_kde.fit(kde_values[kde_labels == 1])
+    controls_score0 = controls_kde.predict(kde_values)
+    patholog_score0 = patholog_kde.predict(kde_values)
+    controls_score = controls_score0*mixture
+    patholog_score = patholog_score0*(1-mixture)
+    ratio = controls_score / (controls_score + patholog_score)
+    #* Empirical cumulative distribution: (CDF_patients-CDF_controls) < 0 => disease progression is positive
+    cdf_controls = np.cumsum(controls_score)/max(np.cumsum(controls_score))
+    cdf_patholog = np.cumsum(patholog_score)/max(np.cumsum(patholog_score))
+    cdf_diff = (cdf_patholog - cdf_controls)/(cdf_patholog + cdf_controls)
+    disease_dirn = -np.sign(np.nansum(cdf_diff)) #-np.sign(np.mean(cdf_diff))
+
+    # f,a=plt.subplots()
+    # a.plot(kde_values,cdf_controls,label='HC')
+    # a.plot(kde_values,cdf_patholog,label='PD')
+    # a.legend()
+    # a.set_title('Disease direction: {0}'.format(disease_dirn))
+    # a.set_ylabel('CDF')
+    # a.set_xlabel(label)
+    # f.show()
+
+    return disease_dirn
