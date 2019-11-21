@@ -200,6 +200,7 @@ def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   score_names=None, plot=False,
                   kde_flag=True,
                   implement_fixed_controls=True,
+                  patholog_dirn_array=None,
                   **kwargs):
     bootstrap_samples = []
     mixtures_ = []
@@ -208,7 +209,7 @@ def bootstrap_ebm_return_mixtures(X, y, n_bootstrap=32, n_mcmc_iter=10000,
         boot_X, boot_y = create_bootstrap_stratified(X, y)
         # Choose which MM to use
         if kde_flag:
-            mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
+            mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls,patholog_dirn_array=patholog_dirn_array)
         else:
             mixtures = fit_all_gmm_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
@@ -231,6 +232,7 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                   kde_flag=True,
                   return_mixtures=False,
                   implement_fixed_controls=True,
+                  patholog_dirn_array=None,
                   **kwargs):
     bootstrap_samples = []
     mixtures_ = []
@@ -239,7 +241,7 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
         boot_X, boot_y = create_bootstrap_stratified(X, y)
         # Choose which MM to use
         if kde_flag:
-            mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
+            mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls,patholog_dirn_array=patholog_dirn_array)
         else:
             mixtures = fit_all_gmm_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         mcmc_samples = mcmc(boot_X, mixtures, n_iter=n_mcmc_iter,
@@ -266,6 +268,7 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
                           kde_flag=True,
                           mix_mod=False,
                           implement_fixed_controls=True,
+                          patholog_dirn_array=None,
                           **kwargs):
     bootstrap_samples = []
     for i in range(n_bootstrap):
@@ -273,7 +276,7 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
         if isinstance(mix_mod,bool):
             print('Bootstrap {0} of {1}: refitting mixtures'.format(i+1,n_bootstrap))
             if kde_flag:
-                mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
+                mixtures = fit_all_kde_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls,patholog_dirn_array=patholog_dirn_array)
             else:
                 mixtures = fit_all_gmm_models(boot_X, boot_y,implement_fixed_controls=implement_fixed_controls)
         else:
@@ -310,10 +313,10 @@ def parallel_bootstrap(X, y, n_bootstrap=50,
     return samples_formatted
 
 
-def parallel_bootstrap_(Xy, kde_flag=True, implement_fixed_controls=True):
+def parallel_bootstrap_(Xy, kde_flag=True, implement_fixed_controls=True, patholog_dirn_array=None):
     boot_X, boot_y = Xy
     if kde_flag:
-        mixtures = fit_all_kde_models(boot_X, boot_y, implement_fixed_controls=implement_fixed_controls)
+        mixtures = fit_all_kde_models(boot_X, boot_y, implement_fixed_controls=implement_fixed_controls,patholog_dirn_array=patholog_dirn_array)
     else:
         mixtures = fit_all_gmm_models(boot_X, boot_y, implement_fixed_controls=implement_fixed_controls)
     mcmc_samples = mcmc(boot_X, mixtures, plot=False)

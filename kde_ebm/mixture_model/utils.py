@@ -36,7 +36,7 @@ def get_prob_mat(X, mixture_models):
     return prob_mat
 
 
-def fit_all_gmm_models(X, y, implement_fixed_controls=False, patholog_dirn=None):
+def fit_all_gmm_models(X, y, implement_fixed_controls=False):
     #* Extract only the first two diagnoses
     msk = np.where(y<2)[0]
     X = X[msk]
@@ -55,7 +55,7 @@ def fit_all_gmm_models(X, y, implement_fixed_controls=False, patholog_dirn=None)
     return mixture_models
 
 
-def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn=None):
+def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array=None):
     #* Extract only the first two diagnoses
     msk = np.where(y<2)[0]
     X = X[msk]
@@ -64,6 +64,7 @@ def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn=None)
     n_particp, n_biomarkers = X.shape
     kde_mixtures = []
     for i in range(n_biomarkers):
+        patholog_dirn = patholog_dirn_array[i]
         bio_X = X[:, i]
         bio_y = y[~np.isnan(bio_X)]
         bio_X = bio_X[~np.isnan(bio_X)]

@@ -20,14 +20,14 @@ class KDEMM(object):
         if patholog_dirn is None:
             patholog_dirn = disease_direction(X,y)
         
-        ####### Diagnostic
-        if patholog_dirn < 0:
-            print('kde.py DIAGNOSTIC: fit(), Disease progresses with decreasing biomarker values - ')
-        elif patholog_dirn > 0:
-            print('kde.py DIAGNOSTIC: fit(), Disease progresses with increasing biomarker values + ')
-        else:
-            print('kde.py DIAGNOSTIC. fit(), ERROR: Disease direction in fit(...,patholog_dirn) must be either positive or negative. \n patholog_dirn = {0]}'.format(patholog_dirn))
-        #######
+        # ####### Diagnostic
+        # if patholog_dirn < 0:
+        #     print('kde.py DIAGNOSTIC: fit(), Disease progresses with decreasing biomarker values - ')
+        # elif patholog_dirn > 0:
+        #     print('kde.py DIAGNOSTIC: fit(), Disease progresses with increasing biomarker values + ')
+        # else:
+        #     print('kde.py DIAGNOSTIC. fit(), ERROR: Disease direction in fit(...,patholog_dirn) must be either positive or negative. \n patholog_dirn = {0]}'.format(patholog_dirn))
+        # #######
         
         sorted_idx = X.argsort(axis=0).flatten()
         kde_values = X.copy()[sorted_idx].reshape(-1,1)
@@ -55,21 +55,6 @@ class KDEMM(object):
             # alpha = 0.5 # sensitivity parameter: 0...1
             # lamb = np.power(f/g,-alpha)
         for i in range(self.n_iters):
-            # #* Manual, different bandwidth for each mixture component, recalculated each loop
-            # bw_controls = self.bandwidth # hscott(kde_values[kde_labels == 0])
-            # bw_patholog = self.bandwidth # hscott(kde_values[kde_labels == 1])
-            # controls_kde = neighbors.KernelDensity(kernel=self.kernel,
-            #                                        bandwidth=bw_controls)
-            # patholog_kde = neighbors.KernelDensity(kernel=self.kernel,
-            #                                        bandwidth=bw_patholog)
-            # controls_kde.fit(kde_values[kde_labels == 0])
-            # # patholog_kde.fit(kde_values[kde_labels == 1])
-            # controls_score = controls_kde.score_samples(kde_values)
-            # patholog_score = patholog_kde.score_samples(kde_values)
-            # #* Missing data - 50/50 likelihood
-            # controls_score[np.isnan(controls_score)] = np.log(0.5)
-            # patholog_score[np.isnan(patholog_score)] = np.log(0.5)
-
             #* Automatic variable/local bandwidth for each component: awkde package from github
             controls_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
             patholog_kde = GaussianKDE(glob_bw="scott", alpha=self.alpha, diag_cov=False)
@@ -100,10 +85,45 @@ class KDEMM(object):
             if patholog_dirn<0:
                 #* More normal (greater) than half the controls: CDF_controls > 0.5
                 labels_forced_normal = cdf_controls > 0.5
+                labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
             elif patholog_dirn>0:
                 #* More normal (less)    than half the controls: CDF_controls < 0.5
                 labels_forced_normal = cdf_controls < 0.5
-            #* Implemented below, after label-swapping: kde_labels[np.where(labels_forced_normal)[0]] = 0
+                labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+            
+            #* FIXME: Make this a prior and change the mixture modelling to be Bayesian
+            #* First iteration only: implement "prior" that flips healthy-looking patients (before median for controls) to pre-event label
+            #* Refit the KDEs at this point
+            if i==0:
+                #* Disease direction: force pre-event/healthy-looking patients to flip
+                kde_labels[np.where(labels_forced_normal_alt)[0]] = 0
+                
+                #* Refit the KDE components. FIXME: this is copy-and-paste from above. Reimplement in a smarter way.
+                controls_kde.fit(kde_values[kde_labels == 0])
+                patholog_kde.fit(kde_values[kde_labels == 1])
+                controls_score = controls_kde.predict(kde_values)
+                patholog_score = patholog_kde.predict(kde_values)
+                controls_score = controls_score*mixture
+                patholog_score = patholog_score*(1-mixture)
+                ratio = controls_score / (controls_score + patholog_score)
+                #* Empirical cumulative distribution: used to swap labels for patients with super-normal values (greater/less than CDF=0.5)
+                cdf_controls = np.cumsum(controls_score)/max(np.cumsum(controls_score))
+                cdf_patholog = np.cumsum(patholog_score)/max(np.cumsum(patholog_score))
+                cdf_diff = (cdf_patholog - cdf_controls)/(cdf_patholog + cdf_controls)
+                disease_dirn = -np.sign(np.nansum(cdf_diff)) # disease_dirn = -np.sign(np.mean(cdf_diff))
+                if disease_dirn > 0:
+                    cdf_direction = 1 + cdf_diff
+                else:
+                    cdf_direction = -cdf_diff
+                #* Identify "normal" biomarkers as being on the healthy side of the controls median => flip patient labels
+                if patholog_dirn<0:
+                    #* More normal (greater) than half the controls: CDF_controls > 0.5
+                    labels_forced_normal = cdf_controls > 0.5
+                    labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
+                elif patholog_dirn>0:
+                    #* More normal (less)    than half the controls: CDF_controls < 0.5
+                    labels_forced_normal = cdf_controls < 0.5
+                    labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
             
             
             #* Missing data - need to test this (probably need to remove/impute missing data at the start)
@@ -119,17 +139,22 @@ class KDEMM(object):
             
             #* Labels to swap: 
             diff_y = np.hstack(([0], np.diff(kde_labels))) # !=0 where adjacent labels differ
-            if (np.sum(diff_y != 0) >= 2 and 
-                    np.unique(kde_labels).shape[0] == 2): 
-                split_y = int(np.all(np.diff(np.where(kde_labels == 0)) == 1)) # 0 if all 0s are adjacent => always 1?
+            
+            # print('kde.py DIAGNOSTIC - iteration {0}'.format(i))
+            # print('kde.py DIAGNOSTIC - np.sum(diff_y != 0) >= 2 : {0}'.format(np.sum(diff_y != 0) >= 2))
+            # print('kde.py DIAGNOSTIC - np.unique(kde_labels).shape[0] == 2 : {0}'.format(np.unique(kde_labels).shape[0] == 2))
+            # print('kde.py DIAGNOSTIC - swapping labels? {0}'.format( ( (np.sum(diff_y != 0) >= 2) & (np.unique(kde_labels).shape[0] == 2) ) ))
+            
+            if ( (np.sum(diff_y != 0) >= 2) & (np.unique(kde_labels).shape[0] == 2) ): 
+                split_y = int(np.all(np.diff(np.where(kde_labels == 0)) == 1)) # kde_label upon which to split: 1 if all 0s are adjacent, 0 otherwise
                 sizes = [x.shape[0] for x in
                          np.split(diff_y, np.where(diff_y != 0)[0])] # lengths of each contiguous set of labels
                 
-                #* Identify which labels to swap using direction of abnormality: mean(KDE components)
-                split_prior_smaller = (np.mean(kde_values[kde_labels ==
-                                                          split_y])
-                                       < np.mean(kde_values[kde_labels ==
-                                                            (split_y+1) % 2]))
+                #* Identify which labels to swap using direction of abnormality: avg(controls) vs avg(patients)
+                split_prior_smaller = (np.median(kde_values[kde_labels ==
+                                                            split_y])
+                                       < np.median(kde_values[kde_labels ==
+                                                              (split_y+1) % 2]))
                 if split_prior_smaller:
                     replace_idxs = np.arange(kde_values.shape[0])[-sizes[2]:] # greater values are swapped
                     #print('Labels swapped for greater values')
@@ -139,13 +164,13 @@ class KDEMM(object):
                 #print(kde_labels.astype(int))
                 kde_labels[replace_idxs] = (split_y+1) % 2 # swaps labels
                 #print(kde_labels.astype(int))
-                
+            
             #*** Prevent label swapping for "strong controls"
             #print('Maintaining labels for strong controls')
             #print(kde_labels.astype(int))
             fixed_controls_criteria_0 = (kde_labels0==0) # Controls 
             
-            #* CDF criteria - do not delete: also used for disease direction
+            #* CDF criteria - do not delete: potentially also used for disease direction
             en = 10
             cdf_threshold = (en-1)/(en+1) # cdf(p) = en*(1-cdf(c)), i.e., en-times more patients than remaining controls
             controls_tail = cdf_direction > (cdf_threshold * max(cdf_direction))
@@ -155,10 +180,10 @@ class KDEMM(object):
             # ratio_threshold_strong_controls = 0.33 # P(control) / [P(control) + P(patient)]
             #fixed_controls_criteria = fixed_controls_criteria & (ratio > ratio_threshold_strong_controls) # "Strong controls" 
             
-            #* Outlier criteria for weak controls: quantiles
-            q = 0.9 # x-tiles
+            #* Outlier criteria for weak (e.g., low-performing on test; or potentially prodromal in sporadic disease) controls: quantiles
+            q = 0.75 # x-tiles
             if disease_dirn>0:
-                q = q # upper 
+                q = q # upper
                 f = np.greater
                 g = np.less
                 #print('Disease direction: positive')
@@ -167,14 +192,13 @@ class KDEMM(object):
                 f = np.less
                 g = np.greater
                 #print('Disease direction: negative')
-            controls_outliers = f(kde_values,np.quantile(kde_values,q))
-            fixed_controls_criteria = fixed_controls_criteria_0.reshape(-1,1) & (~controls_outliers.reshape(-1,1))
-
+            controls_outliers = f(kde_values,np.quantile(kde_values,q)).reshape(-1,1) & (kde_labels0==0)
+            
+            fixed_controls_criteria = fixed_controls_criteria_0.reshape(-1,1) & ~(controls_outliers)
+            
             if implement_fixed_controls:
                 kde_labels[np.where(fixed_controls_criteria)[0]] = 0
-            
-            #* Disease direction: force pre-event/healthy-looking patients to flip
-            kde_labels[np.where(labels_forced_normal)[0]] = 0
+                #kde_labels[np.where(controls_outliers)[0]] = 1
             
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
