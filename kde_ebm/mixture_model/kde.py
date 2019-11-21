@@ -125,12 +125,6 @@ class KDEMM(object):
                     labels_forced_normal = cdf_controls < 0.5
                     labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
             
-            
-            #* Missing data - need to test this (probably need to remove/impute missing data at the start)
-            #ratio[np.isnan(ratio) & (kde_labels0==0)] = 1-cdf_direction[np.isnan(ratio) & (kde_labels0==0)]
-            #ratio[np.isnan(ratio) & (kde_labels0==1)] = cdf_direction[np.isnan(ratio) & (kde_labels0==1)]
-            #ratio[np.isnan(ratio)] = 0.5
-            
             if(np.all(ratio == old_ratios)):
                 break
             iter_count += 1
@@ -139,11 +133,6 @@ class KDEMM(object):
             
             #* Labels to swap: 
             diff_y = np.hstack(([0], np.diff(kde_labels))) # !=0 where adjacent labels differ
-            
-            # print('kde.py DIAGNOSTIC - iteration {0}'.format(i))
-            # print('kde.py DIAGNOSTIC - np.sum(diff_y != 0) >= 2 : {0}'.format(np.sum(diff_y != 0) >= 2))
-            # print('kde.py DIAGNOSTIC - np.unique(kde_labels).shape[0] == 2 : {0}'.format(np.unique(kde_labels).shape[0] == 2))
-            # print('kde.py DIAGNOSTIC - swapping labels? {0}'.format( ( (np.sum(diff_y != 0) >= 2) & (np.unique(kde_labels).shape[0] == 2) ) ))
             
             if ( (np.sum(diff_y != 0) >= 2) & (np.unique(kde_labels).shape[0] == 2) ): 
                 split_y = int(np.all(np.diff(np.where(kde_labels == 0)) == 1)) # kde_label upon which to split: 1 if all 0s are adjacent, 0 otherwise
@@ -157,30 +146,21 @@ class KDEMM(object):
                                                               (split_y+1) % 2]))
                 if split_prior_smaller:
                     replace_idxs = np.arange(kde_values.shape[0])[-sizes[2]:] # greater values are swapped
-                    #print('Labels swapped for greater values')
                 else:
                     replace_idxs = np.arange(kde_values.shape[0])[:sizes[0]] # lesser values are swapped
-                    #print('Labels swapped for lesser values')
-                #print(kde_labels.astype(int))
                 kde_labels[replace_idxs] = (split_y+1) % 2 # swaps labels
-                #print(kde_labels.astype(int))
             
             #*** Prevent label swapping for "strong controls"
-            #print('Maintaining labels for strong controls')
-            #print(kde_labels.astype(int))
             fixed_controls_criteria_0 = (kde_labels0==0) # Controls 
-            
-            #* CDF criteria - do not delete: potentially also used for disease direction
-            en = 10
-            cdf_threshold = (en-1)/(en+1) # cdf(p) = en*(1-cdf(c)), i.e., en-times more patients than remaining controls
-            controls_tail = cdf_direction > (cdf_threshold * max(cdf_direction))
-            #fixed_controls_criteria_0 = fixed_controls_criteria_0 & (~controls_tail)
-            
-            #* PDF ratio criteria
+            # #*** CDF criteria - do not delete: potentially also used for disease direction
+            # en = 10
+            # cdf_threshold = (en-1)/(en+1) # cdf(p) = en*(1-cdf(c)), i.e., en-times more patients than remaining controls
+            # controls_tail = cdf_direction > (cdf_threshold * max(cdf_direction))
+            # #fixed_controls_criteria_0 = fixed_controls_criteria_0 & (~controls_tail)
+            # #*** PDF ratio criteria
             # ratio_threshold_strong_controls = 0.33 # P(control) / [P(control) + P(patient)]
-            #fixed_controls_criteria = fixed_controls_criteria & (ratio > ratio_threshold_strong_controls) # "Strong controls" 
-            
-            #* Outlier criteria for weak (e.g., low-performing on test; or potentially prodromal in sporadic disease) controls: quantiles
+            # fixed_controls_criteria = fixed_controls_criteria & (ratio > ratio_threshold_strong_controls) # "Strong controls" 
+            #*** Outlier criteria for weak (e.g., low-performing on test; or potentially prodromal in sporadic disease) controls: quantiles
             q = 0.75 # x-tiles
             if disease_dirn>0:
                 q = q # upper
@@ -193,12 +173,10 @@ class KDEMM(object):
                 g = np.greater
                 #print('Disease direction: negative')
             controls_outliers = f(kde_values,np.quantile(kde_values,q)).reshape(-1,1) & (kde_labels0==0)
-            
             fixed_controls_criteria = fixed_controls_criteria_0.reshape(-1,1) & ~(controls_outliers)
-            
             if implement_fixed_controls:
                 kde_labels[np.where(fixed_controls_criteria)[0]] = 0
-                #kde_labels[np.where(controls_outliers)[0]] = 1
+                #kde_labels[np.where(controls_outliers)[0]] = 1 # Flip outlier controls
             
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
