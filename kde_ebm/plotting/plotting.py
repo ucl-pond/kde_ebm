@@ -39,7 +39,7 @@ def mixture_model_grid(X, y, mixtures,
         hist_c = colors[:2]
         leg1 = ax[i // n_x, i % n_x].hist(hist_dat,
                                           label=class_names,
-                                          normed=True,
+                                          density=True,
                                           color=hist_c,
                                           alpha=0.7,
                                           stacked=True)

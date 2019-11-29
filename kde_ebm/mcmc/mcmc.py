@@ -140,20 +140,18 @@ def create_bootstrap_stratified(X, y):
     boot_y = np.empty(y.shape, dtype='int32')
     idxs = np.arange(y.shape[0])
 
-    #* Restrict to those having sufficiently-complete (minimal missing) data
-    # => problem: biases towards the others.
-
-    #* Impute missing data with median values for the class
-    x_median_y0 = np.tile(np.nanmedian(X[y==0,],axis=0),(sum(y==0),1))
-    x_median_y1 = np.tile(np.nanmedian(X[y==1,],axis=0),(sum(y==1),1))
-    X_median = np.empty(X.shape)
-    X_median[y==0,] = x_median_y0
-    X_median[y==1,] = x_median_y1
-    X_imputed = X.copy()
-    (a,b) = np.where(np.isnan(X))
-    for j,k in zip(a,b):
-        X_imputed[j,k] = X_median[j,k]
-    X_sample_from_me = X_imputed.copy()
+    # #* Impute missing data with median values for the class
+    # x_median_y0 = np.tile(np.nanmedian(X[y==0,],axis=0),(sum(y==0),1))
+    # x_median_y1 = np.tile(np.nanmedian(X[y==1,],axis=0),(sum(y==1),1))
+    # X_median = np.empty(X.shape)
+    # X_median[y==0,] = x_median_y0
+    # X_median[y==1,] = x_median_y1
+    # X_imputed = X.copy()
+    # (a,b) = np.where(np.isnan(X))
+    # for j,k in zip(a,b):
+    #     X_imputed[j,k] = X_median[j,k]
+    # X_sample_from_me = X_imputed.copy()
+    X_sample_from_me = X.copy()
 
     #* Stratified bootstrap: sample same number per class
     y_u,y_freq = np.unique(y,return_counts=True)
@@ -168,6 +166,10 @@ def create_bootstrap_stratified(X, y):
     iqr -= np.nanpercentile(boot_X, 25, axis=0)
     if np.any(iqr == 0):
         return create_bootstrap_stratified(X, y)
+    # #* Check for level of missing data: per feature (individuals may be sampled multiply)
+    # n_missing_per_feature = np.sum(np.isnan(boot_X),axis=0)
+    # if np.any(n_missing_per_feature > int(X.shape[0]/4)):
+    #     return create_bootstrap_stratified(X, y)
     return boot_X, boot_y
 
 # def create_bootstrap_fixed(X, y):
