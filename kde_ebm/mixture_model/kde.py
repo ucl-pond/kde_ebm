@@ -150,6 +150,7 @@ class KDEMM(object):
                          np.split(diff_y, np.where(diff_y != 0)[0])] # lengths of each contiguous set of labels
                 
                 #* Identify which labels to swap using direction of abnormality: avg(controls) vs avg(patients)
+                #* N ote that this is now like k-medians clustering, rather than k-means
                 split_prior_smaller = (np.median(kde_values[kde_labels ==
                                                             split_y])
                                        < np.median(kde_values[kde_labels ==
