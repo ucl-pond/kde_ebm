@@ -22,8 +22,9 @@ Dependencies
 - [NumPy](https://github.com/numpy/numpy)
 - [SciPy](https://github.com/scipy/scipy)
 - [Matplotlib](https://github.com/matplotlib/matplotlib)
+- [awkde](https://github.com/noxtoby/awkde)
 
-The code depends heavily on NumPy, uses SciPy to calculate some stats and do some optimisation and uses Matplotlib just to do the plotting.
+The code depends heavily on NumPy, uses SciPy to calculate some stats and do some optimisation, and uses Matplotlib just to do the plotting. awkde is for variable bandwidth KDE.
 
 Contributing
 ============
@@ -34,7 +35,7 @@ Tweaks
 
 Implemented in `variable_bandwidth` and `neils_tweaks` branches
 
-1. Variable bandwidth KDE
+1. Variable bandwidth KDE ([awkde](https://github.com/noxtoby/awkde))
 
    Improved mixture model fitting in low-density areas such as the tail of a skewed distribution
   
