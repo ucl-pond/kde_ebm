@@ -3,5 +3,5 @@
 
 from .mcmc import mcmc
 from .mcmc import bootstrap_ebm
-from .mcmc import parallell_bootstrap
+from .mcmc import parallel_bootstrap
 from .utils import enumerate_all
