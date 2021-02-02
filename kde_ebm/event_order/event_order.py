@@ -7,7 +7,7 @@ class EventOrder(object):
     def __init__(self, ordering=None, n_biomarkers=None, score=None):
         super(EventOrder, self).__init__()
         if ordering is None and n_biomarkers is None:
-            raise ValueError('EventOrder __init__ takes one arguement,'
+            raise ValueError('EventOrder __init__ takes one argument,'
                              ' zero given')
         if ordering is None:
             self.ordering = np.arange(n_biomarkers)
@@ -55,7 +55,14 @@ class EventOrder(object):
         stage_likelihoods = np.empty((n_particp, n_biomarkers+1))
         for i in range(k):
             stage_likelihoods[:, i] = np.prod(p_yes[:, :i], 1)*np.prod(p_no[:, i:n_biomarkers], 1)
+        # Maximum-Likelihood stage
         stages = np.argmax(stage_likelihoods, axis=1)
+        # Weighted-average stage: weighted by stage likelihood
+        #stage_likelihoods_max = np.tile(np.max(stage_likelihoods,axis=1).reshape(-1,1),(1,stage_likelihoods.shape[1]))
+        #weights = stage_likelihoods / stage_likelihoods_max
+        #stages_weighted_avg = np.average(np.tile(np.arange(0,n_biomarkers+1),(n_particp,1)),
+        #                                 axis=1,
+        #                                 weights=weights)
         return stages, stage_likelihoods
 
     def swap_events(self):

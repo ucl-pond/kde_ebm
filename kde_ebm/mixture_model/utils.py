@@ -36,7 +36,12 @@ def get_prob_mat(X, mixture_models):
     return prob_mat
 
 
-def fit_all_gmm_models(X, y):
+def fit_all_gmm_models(X, y, implement_fixed_controls=False):
+    #* Extract only the first two diagnoses
+    msk = np.where(y<2)[0]
+    X = X[msk]
+    y = y[msk]
+    
     n_particp, n_biomarkers = X.shape
     mixture_models = []
     for i in range(n_biomarkers):
@@ -50,14 +55,25 @@ def fit_all_gmm_models(X, y):
     return mixture_models
 
 
-def fit_all_kde_models(X, y):
+def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array=None):
+    #* Extract only the first two diagnoses
+    msk = np.where(y<2)[0]
+    X = X[msk]
+    y = y[msk]
+    
     n_particp, n_biomarkers = X.shape
     kde_mixtures = []
     for i in range(n_biomarkers):
+        patholog_dirn = patholog_dirn_array[i]
         bio_X = X[:, i]
         bio_y = y[~np.isnan(bio_X)]
-        bio_X = bio_X[~np.isnan(bio_X)].reshape(-1, 1)
+        bio_X = bio_X[~np.isnan(bio_X)]
+        # print('utils:fit_all_kde_models() \n  - range(np.isnan(bio_X[y=0/1])) = [{0},{1}],[{2},{3}]'.format(
+        #     min((bio_X[bio_y==0])),max((bio_X[bio_y==0])),
+        #     min((bio_X[bio_y==1])),max((bio_X[bio_y==1]))
+        #     )
+        # )
         kde = KDEMM()
-        kde.fit(bio_X, bio_y)
+        kde.fit(bio_X, bio_y,implement_fixed_controls, patholog_dirn=patholog_dirn)
         kde_mixtures.append(kde)
     return kde_mixtures

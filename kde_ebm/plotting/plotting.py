@@ -94,22 +94,36 @@ def mcmc_uncert_mat(mcmc_samples, ml_order=None, score_names=None):
         confusion_mat[i, :] = np.sum(all_orders == ml_order[i], axis=0)
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.imshow(confusion_mat, interpolation='nearest', cmap='Greys')
-
-    tick_marks = np.arange(n_biomarkers)
-
-    ax.set_xticks(tick_marks)
-    ax.set_xticklabels(range(1, n_biomarkers+1), rotation=45)
+    ax.imshow(confusion_mat, interpolation='nearest', cmap='Purples')
+    
+    #* Added by Neil Oxtoby, June 2018
+    if n_biomarkers > 8:
+        stp = 2
+    else:
+        stp = 1
+    tick_marks_x = np.arange(0,n_biomarkers,stp)
+    labs = range(1, n_biomarkers+1,stp)
+    ax.set_xticks(tick_marks_x)
+    ax.set_xticklabels(labs, rotation=0)
+    tick_marks_y = np.arange(n_biomarkers)
+    ax.set_yticks(tick_marks_y+0.2)
     trimmed_scores = [x[2:].replace('_', ' ') if x.startswith('p_')
                       else x.replace('_', ' ') for x in score_names]
-    ax.set_yticks(tick_marks)
     ax.set_yticklabels(np.array(trimmed_scores, dtype='object')[ml_order],
                        rotation=30, ha='right',
                        rotation_mode='anchor')
 
     ax.set_ylabel('Biomarker Name', fontsize=20)
     ax.set_xlabel('Event Order', fontsize=20)
-    ax.tick_params(axis='both', which='major', labelsize=15)
+    
+    # Minor ticks
+    ax.set_xticks(np.arange(-.5, n_biomarkers, 1), minor=True);
+    ax.set_yticks(np.arange(-.5, n_biomarkers, 1), minor=True);
+    # Gridlines based on minor ticks
+    ax.grid(False)
+    #ax.grid(which='minor', color='w', linestyle='-', linewidth=1)
+    
+    #ax.tick_params(axis='both', which='major', labelsize=15)
     fig.tight_layout()
 
     return fig, ax
@@ -120,7 +134,7 @@ def stage_histogram(stages, y, max_stage=None, class_names=None):
     hist_dat = [stages[y == 0],
                 stages[y == 1]]
     if class_names is None:
-        class_names = ['CN', 'tAD']
+        class_names = ['Controls', 'Patients']
     if max_stage is None:
         max_stage = stages.max()
     hist_c = colors[:2]
