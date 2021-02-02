@@ -1,7 +1,7 @@
-Event-Based Model
+KDE Event-Based Model
 =================
 
-The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a degenerative disease. This version uses nonparametric distributions within the mixture modelling step.
+The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a degenerative disease. This version uses nonparametric (kernel density estimate) distributions within the mixture modelling step.
 
 Important Links
 ===============
@@ -10,12 +10,12 @@ Important Links
 
 KDE EBM paper
 -------------
-- [Firth, *et al.*, bioRxiv, **2018**](https://doi.org/10.1101/297978)
+- [Firth, *et al.*, Alzheimer's & Dementia, **2020**](https://doi.org/10.1002/alz.12083)
 
 EBM Papers
 ----------
-- [Young *et al.*, Brain, **2014**](http://brain.oxfordjournals.org/cgi/pmidlookup?view=long&pmid=25012224)
-- [Fonteijn *et al.*, NeuroImage, **2012**](http://www.sciencedirect.com/science/article/pii/S1053811912000791)
+- [Young *et al.*, Brain, **2014**](https://doi.org/10.1093/brain/awu176)
+- [Fonteijn *et al.*, NeuroImage, **2012**](https://doi.org/10.1016/j.neuroimage.2012.01.062)
 
 Dependencies
 ============
@@ -24,7 +24,7 @@ Dependencies
 - [Matplotlib](https://github.com/matplotlib/matplotlib)
 - [awkde](https://github.com/noxtoby/awkde)
 
-The code depends heavily on NumPy, uses SciPy to calculate some stats and do some optimisation and uses Matplotlib just to do the plotting. awkde is for variable bandwidth KDE.
+The code depends heavily on NumPy, uses SciPy to calculate some stats and do some optimisation and uses Matplotlib just to do the plotting. awkde is for variable bandwidth KDE (meged into main/master branch in Feb 2020).
 
 Contributing
 ============
@@ -33,9 +33,7 @@ Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file before making any contri
 Tweaks
 ======
 
-Implemented in `variable_bandwidth` and `neils_tweaks` branches
-
-1. Variable bandwidth KDE ([awkde](https://github.com/noxtoby/awkde))
+1. Variable bandwidth KDE ([awkde](https://github.com/noxtoby/awkde)) mixture modelling
 
    Improved mixture model fitting in low-density areas such as the tail of a skewed distribution
   
