@@ -48,7 +48,6 @@ def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
         if ratio > np.random.random():
             current_order = new_order
         mcmc_samples.append(current_order)
-    mcmc_samples.sort(reverse=True)
     return mcmc_samples
 
 #* Added by Neil Oxtoby for z-score EBM
@@ -317,6 +316,10 @@ def parallel_bootstrap(X, y, n_bootstrap=50,
 
 def parallel_bootstrap_(Xy, kde_flag=True, implement_fixed_controls=True, patholog_dirn_array=None):
     boot_X, boot_y = Xy
+    #FIXME: test this
+    # if patholog_dirn_array is None:
+    #     #* Default: disease progression is increasing values
+    #     patholog_dirn_array = np.ones(boot_y.shape)
     if kde_flag:
         mixtures = fit_all_kde_models(boot_X, boot_y, implement_fixed_controls=implement_fixed_controls,patholog_dirn_array=patholog_dirn_array)
     else:

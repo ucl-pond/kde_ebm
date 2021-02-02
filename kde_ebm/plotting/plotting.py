@@ -140,7 +140,7 @@ def stage_histogram(stages, y, max_stage=None, class_names=None):
     hist_c = colors[:2]
     n, bins, patch = ax.hist(hist_dat,
                              label=class_names,
-                             normed=True,
+                             density=True,
                              color=hist_c,
                              stacked=False,
                              bins=max_stage+1)

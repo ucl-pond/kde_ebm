@@ -29,6 +29,8 @@ def main():
     # any uncertainty in the sequence
     fig, ax = plotting.mcmc_uncert_mat(res, score_names=bmname)
     fig.show()
+
+    res.sort(reverse=True)
     ml_order = res[0]
 
     # Finally we can stage all our participants using the fitted EBM
