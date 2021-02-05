@@ -19,7 +19,7 @@ def greedy_ascent_trace(greedy_dict):
 
 
 def mixture_model_grid(X, y, mixtures,
-                       score_names=None, class_names=None):
+                       score_names=None, class_names=None, hist_align='left'):
     n_particp, n_biomarkers = X.shape
     if score_names is None:
         score_names = ['BM{}'.format(x+1) for x in range(n_biomarkers)]
@@ -35,6 +35,14 @@ def mixture_model_grid(X, y, mixtures,
 
         hist_dat = [bio_X[bio_y == 0],
                     bio_X[bio_y == 1]]
+        #* Find useful bin edges for the data: particularly useful for low-dimensional categorical data
+        n_unique_values_bio_X = len(np.unique(bio_X))
+        magic_number = 5
+        if n_unique_values_bio_X < magic_number:
+            bin_edges = list(np.unique(bio_X) - 0.5)
+            bin_edges.append(bin_edges[-1]+1)
+        else:
+            bin_edges = 12
 
         hist_c = colors[:2]
         leg1 = ax[i // n_x, i % n_x].hist(hist_dat,
@@ -42,7 +50,9 @@ def mixture_model_grid(X, y, mixtures,
                                           density=True,
                                           color=hist_c,
                                           alpha=0.7,
-                                          stacked=True)
+                                          stacked=True,
+                                          align=hist_align,
+                                          bins=bin_edges)
         linspace = np.linspace(bio_X.min(), bio_X.max(), 100).reshape(-1, 1)
         if isinstance(mixtures[i], ParametricMM):
             controls_score, patholog_score = mixtures[i].pdf(mixtures[i].theta,
