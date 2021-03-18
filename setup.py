@@ -1,4 +1,4 @@
-# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# Authors: Nicholas C. Firth, Neil P. Oxtoby
 # License: TBC
 
 
@@ -20,12 +20,12 @@ def configuration(parent_package='', top_path=None):
 
 def setup_package():
     metadata = dict(name='kde_ebm',
-                    maintainer='Nicholas C. Firth',
-                    maintainer_email='nicholas.firth@ucl.ac.uk',
-                    description='kde_ebm code innit',
+                    maintainer='Neil P. Oxtoby',
+                    maintainer_email='n.oxtoby@ucl.ac.uk',
+                    description='KDE EBM code',
                     license='TBC',
                     url='',
-                    version='0.0.1',
+                    version='0.0.2',
                     zip_safe=False,
                     classifiers=['Intended Audience :: Science/Research',
                                  'Programming Language :: Python',
