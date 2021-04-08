@@ -3,6 +3,8 @@ KDE Event-Based Model
 
 The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a degenerative disease. This version uses nonparametric (kernel density estimate) distributions within the mixture modelling step.
 
+Installation instructions: see [INSTALL](INSTALL.md) file.
+
 Important Links
 ===============
 
@@ -14,11 +16,13 @@ KDE EBM paper
 
 EBM Papers
 ----------
-- [Young *et al.*, Brain, **2014**](https://doi.org/10.1093/brain/awu176)
 - [Fonteijn *et al.*, NeuroImage, **2012**](https://doi.org/10.1016/j.neuroimage.2012.01.062)
+- [Young *et al.*, Brain, **2014**](https://doi.org/10.1093/brain/awu176)
 
 Dependencies
 ============
+See [INSTALL](INSTALL.md) for installation instructions.
+
 - [NumPy](https://github.com/numpy/numpy)
 - [SciPy](https://github.com/scipy/scipy)
 - [Matplotlib](https://github.com/matplotlib/matplotlib)
