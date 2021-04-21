@@ -18,12 +18,14 @@ virtualenv kdeebm_env --python=python3.9
 
 Activate the virtual environment:
 
-```javascript macOS/linux
-source kdeebm_env/bin/activate
-```
-```javascript Windows
-kdeebm_env\Scripts\activate
-```
+* macOS/linux:
+  ```javascript macOS/linux
+  source kdeebm_env/bin/activate
+  ```
+* Windows:
+  ```javascript Windows
+  kdeebm_env\Scripts\activate
+  ```
 
 You are now in a virtual environment. It's probably less exciting than it sounds, but it's important.
 
