@@ -51,5 +51,9 @@ Use `pip` to install dependencies
 ```
 pip install -r requirements.txt
 ```
+or
+```
+/usr/local/bin/python3 -m pip install -r requirements.txt
+```
 
 You are good to go! Go ahead and play with the [examples](examples).
