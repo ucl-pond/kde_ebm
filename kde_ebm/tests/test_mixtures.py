@@ -30,8 +30,8 @@ def main():
         # ax.plot(linspace, cn_pdf, color='C0')
         # ax.plot(linspace, ad_pdf, color='C1')
     p_mat = MixtureModel.get_prob_mat(X, y, mixture_models)
-    print p_mat.shape
-    print p_mat[0, :, :]
+    print('p_mat.shape: {0}'.format(p_mat.shape))
+    print('p_mat[0, :, :]: {0}'.format(p_mat[0, :, :]))
 
     # plt.show()
 
