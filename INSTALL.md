@@ -6,14 +6,14 @@ You'll need `pip` and `virtual_env`.
 Setup a virtual environment 
 ============
 
-Open a terminal, install `virtualenv` using pip, create a new virtual environment, preferably with python 3.7 (for [`awkde`](https://github.com/noxtoby/awkde)):
+Open a terminal, install `virtualenv` using pip, create a new virtual environment with python 3:
 
 ```
 pip install virtualenv
 ```
 
 ```
-virtualenv kdeebm_env --python=python3.7
+virtualenv kdeebm_env --python=python3
 ```
 
 Activate the virtual environment:
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 ```
 brew install python3
 /usr/local/bin/python3 -m venv kdeebm_env 
-/usr/local/bin/virtualenv kdeebm_env --python=python3.7
+/usr/local/bin/virtualenv kdeebm_env --python=python3
 source kdeebm_env/bin/activate
 ```
 then install dependencies using:
