@@ -4,6 +4,7 @@ from ..event_order import EventOrder
 from ..mixture_model import get_prob_mat, fit_all_gmm_models, fit_all_kde_models
 from multiprocessing import Pool, cpu_count
 from ..plotting import mixture_model_grid, mcmc_trace, greedy_ascent_trace
+from tqdm import tqdm
 import numpy as np
 
 
@@ -14,12 +15,16 @@ def greedy_ascent_creation(prob_mat, n_iter=1000, n_init=10):
         current_order = EventOrder(n_biomarkers=n_biomarkers)
         current_order.score_ordering(prob_mat)
         starts_dict[start_idx].append(current_order)
+        pbar = tqdm(total=n_iter)
+        pbar.update(1)
         for iter_n in range(1, n_iter):
             new_order = current_order.swap_events()
             new_order.score_ordering(prob_mat)
             if new_order > current_order:
                 current_order = new_order
             starts_dict[start_idx].append(current_order)
+            pbar.update(1)
+        pbar.close()
     return starts_dict
 
 
@@ -38,6 +43,8 @@ def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
         if new_order > current_order:
             current_order = new_order
     mcmc_samples = [current_order]
+    pbar = tqdm(total=n_iter)
+    pbar.update(1)
     for i in range(1, n_iter):
         new_order = current_order.swap_events()
         new_order.score_ordering(prob_mat)
@@ -48,6 +55,8 @@ def mcmc(X, mixture_models, n_iter=10000, greedy_n_iter=1000,
         if ratio > np.random.random():
             current_order = new_order
         mcmc_samples.append(current_order)
+        pbar.update(1)
+    pbar.close()
     return mcmc_samples
 
 #* Added by Neil Oxtoby for z-score EBM
@@ -56,15 +65,15 @@ def get_prob_mat_z(Z):
     P(event) = sigmoidal function of z-score,
                inflecting at z==1,
                width of approximately 2 (starts at z=0, saturates at z=2)
-    
+
     Assumes the following has already happened, and that z increases with disease progression
-    
+
     z = x[y==1,]
     mu = np.tile(np.nanmean(z,axis=0),(z.shape[0],1))
     sig = np.tile(np.nanstd(z,axis=0),(z.shape[0],1))
     z = (z - mu)/sig
     z = z*np.tile(multiplier,(z.shape[0],1))
-    
+
     Neil Oxtoby, July
     """
     #***
@@ -265,7 +274,7 @@ def bootstrap_ebm(X, y, n_bootstrap=32, n_mcmc_iter=10000,
 
 #* Added by Neil Oxtoby, June 2018 - bootstrapping of the sequence only, not the MM
 def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
-                          score_names=None, plot=False, 
+                          score_names=None, plot=False,
                           kde_flag=True,
                           mix_mod=False,
                           implement_fixed_controls=True,
@@ -296,7 +305,7 @@ def bootstrap_ebm_fixedMM(X, y, n_bootstrap=32, n_mcmc_iter=10000,
             fig.savefig('Bootstrap{}_mcmc_trace.png'.format(i+1))
             fig.close()
     return bootstrap_samples
-    
+
 
 def parallel_bootstrap(X, y, n_bootstrap=50,
                         n_processes=-1):
