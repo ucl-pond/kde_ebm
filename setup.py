@@ -1,5 +1,6 @@
 # Authors: Nicholas C. Firth, Neil P. Oxtoby
 # License: TBC
+__version__ = '0.0.2'
 
 
 def configuration(parent_package='', top_path=None):
@@ -25,7 +26,7 @@ def setup_package():
                     description='KDE EBM code',
                     license='TBC',
                     url='',
-                    version='0.0.2',
+                    version=__version__,
                     zip_safe=False,
                     classifiers=['Intended Audience :: Science/Research',
                                  'Programming Language :: Python',
