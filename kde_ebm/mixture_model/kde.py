@@ -16,7 +16,7 @@ class KDEMM(object):
         self.alpha = 0.3
         self.beta = self.alpha # alpha for controls # sensitivity parameter: 0...1
 
-    def fit(self, X, y, implement_fixed_controls=False, patholog_dirn=None):
+    def fit(self, X, y, implement_fixed_controls=False, patholog_dirn=None, outlier_controls_quantile = 0.90):
         #* Requires direction of disease progression as input
         if patholog_dirn is None:
             patholog_dirn = disease_direction(X,y)
@@ -175,14 +175,13 @@ class KDEMM(object):
             # ratio_threshold_strong_controls = 0.33 # P(control) / [P(control) + P(patient)]
             # fixed_controls_criteria = fixed_controls_criteria & (ratio > ratio_threshold_strong_controls) # "Strong controls" 
             #*** Outlier criteria for weak (e.g., low-performing on test; or potentially prodromal in sporadic disease) controls: quantiles
-            q = 0.90 # x-tiles
             if disease_dirn>0:
-                q = q # upper
+                q = outlier_controls_quantile # upper
                 f = np.greater
                 g = np.less
                 # print('Disease direction: positive')
             else:
-                q = 1 - q # lower
+                q = 1 - outlier_controls_quantile # lower
                 f = np.less
                 g = np.greater
                 # print('Disease direction: negative')
