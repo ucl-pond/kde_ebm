@@ -16,8 +16,8 @@ def main():
     g = Gaussian.Gaussian(mu=0, sigma=1)
     # print g.pdf([0, 0.1, 0.5, 1])[0] == 0.39894228
     event_sign = np.nanmean(X[y == 0, 0]) > np.nanmean(X[y == 1, 0])
-    print (np.nanmin(X[y == 0]))
-    print (g.get_bounds(X[:, 0], X[y == 0], event_sign))
+    print np.nanmin(X[y == 0])
+    print g.get_bounds(X[:, 0], X[y == 0], event_sign)
 
 
 if __name__ == '__main__':
