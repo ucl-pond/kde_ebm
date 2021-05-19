@@ -11,4 +11,4 @@ The Event-Based Model (EBM) is a simple, robust model for the estimation of the 
 
 ## KDE EBM applications
 - Alzheimer's disease (and Posterior Cortical Atrophy): [Firth, *et al.*, Alzheimer's & Dementia, **2020**](https://doi.org/10.1002/alz.12083)
-- Parkinson's disease: [Oxtoby, *et al.*, Brain, **2022**](https://doi.org/10.1093/brain/awaa461)
+- Parkinson's disease: [Oxtoby, *et al.*, Brain, **2021**](https://doi.org/10.1093/brain/awaa461)
