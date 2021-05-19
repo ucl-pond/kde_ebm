@@ -1,10 +1,18 @@
 Installation: KDE Event-Based Model
 =================
 
+As of 2021-05-19, the following should work:
+
+`pip install git+https://github.com/ucl-pond/kde_ebm`
+
+
+<hr/>
+
+## Old instructions
+
 You'll need `pip` and `virtual_env`.
 
-Setup a virtual environment 
-============
+## Setup a virtual environment 
 
 Open a terminal, install `virtualenv` using pip, create a new virtual environment with python 3:
 
@@ -29,8 +37,8 @@ Activate the virtual environment:
 
 You are now in a virtual environment. It's probably less exciting than it sounds, but it's important.
 
-Install Dependencies
-============
+## Install Dependencies
+
 See below for how to use the provided `requirements.txt` file to install the following dependencies via `pip`:
 - [NumPy](https://github.com/numpy/numpy)
 - [SciPy](https://github.com/scipy/scipy)
