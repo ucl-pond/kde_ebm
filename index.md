@@ -1,37 +1,14 @@
-## Welcome to GitHub Pages
+# KDE Event-Based Model
 
-You can use the [editor on GitHub](https://github.com/ucl-pond/kde_ebm/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a progressive disease such as neurodegenerative diseases like Alzheimer's and Parkinson's. This version uses nonparametric (kernel density estimate) distributions within the mixture modelling step.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Papers to cite
+- KDE EBM:
+  - [Firth, *et al.*, Alzheimer's & Dementia, **2020**](https://doi.org/10.1002/alz.12083)
+- EBM:
+  - [Fonteijn *et al.*, NeuroImage, **2012**](https://doi.org/10.1016/j.neuroimage.2012.01.062)
+  - [Young *et al.*, Brain, **2014**](https://doi.org/10.1093/brain/awu176)
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ucl-pond/kde_ebm/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+## KDE EBM applications
+- Alzheimer's disease (and Posterior Cortical Atrophy): [Firth, *et al.*, Alzheimer's & Dementia, **2020**](https://doi.org/10.1002/alz.12083)
+- Parkinson's disease: [Oxtoby, *et al.*, Brain, **2022**](https://doi.org/10.1093/brain/awaa461)
