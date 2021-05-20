@@ -1,5 +1,5 @@
 # Authors: Nicholas C. Firth, Neil P. Oxtoby
-# License: TBC
+# License: MIT
 __version__ = '0.0.2'
 
 
@@ -25,7 +25,7 @@ def setup_package():
                     maintainer_email='n.oxtoby@ucl.ac.uk',
                     description='KDE EBM code',
                     license='TBC',
-                    url='',
+                    url='https://ucl-pond.github.io/kde_ebm',
                     version=__version__,
                     zip_safe=False,
                     classifiers=['Intended Audience :: Science/Research',
