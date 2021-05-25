@@ -5,6 +5,8 @@ As of 2021-05-19, the following should work:
 
 `pip install git+https://github.com/ucl-pond/kde_ebm`
 
+(If not, try also this: `pip install git+https://github.com/ucl-pond/kde_ebm --use-feature=in-tree-build --force-reinstall`)
+
 
 <hr/>
 
