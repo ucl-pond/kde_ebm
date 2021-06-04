@@ -90,19 +90,21 @@ class KDEMM(object):
             #* Identify "normal" biomarkers as being on the healthy side of the controls median => flip patient labels
             if patholog_dirn<0:
                 #* More normal (greater) than half the controls: CDF_controls > 0.5
-                labels_forced_normal = cdf_controls > 0.5
+                labels_forced_normal_cdf = cdf_controls > 0.5
                 labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
             elif patholog_dirn>0:
                 #* More normal (less)    than half the controls: CDF_controls < 0.5
-                labels_forced_normal = cdf_controls < 0.5
+                labels_forced_normal_cdf = cdf_controls < 0.5
                 labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+            labels_forced_normal = labels_forced_normal_cdf
             
             #* FIXME: Make this a prior and change the mixture modelling to be Bayesian
             #* First iteration only: implement "prior" that flips healthy-looking patients (before median for controls) to pre-event label
             #* Refit the KDEs at this point
             if i==0:
                 #* Disease direction: force pre-event/healthy-looking patients to flip
-                kde_labels[np.where(labels_forced_normal_alt)[0]] = 0
+                kde_labels[np.where(labels_forced_normal)[0]] = 0
+                
                 bin_counts = np.bincount(kde_labels).astype(float)
                 mixture = bin_counts[0] / bin_counts.sum()
                 #* Refit the KDE components. FIXME: this is copy-and-paste from above. Reimplement in a smarter way.
@@ -127,12 +129,13 @@ class KDEMM(object):
                 #* Identify "normal" biomarkers as being on the healthy side of the controls median => flip patient labels
                 if patholog_dirn<0:
                     #* More normal (greater) than half the controls: CDF_controls > 0.5
-                    labels_forced_normal = cdf_controls > 0.5
+                    labels_forced_normal_cdf = cdf_controls > 0.5
                     labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
                 elif patholog_dirn>0:
                     #* More normal (less)    than half the controls: CDF_controls < 0.5
-                    labels_forced_normal = cdf_controls < 0.5
+                    labels_forced_normal_cdf = cdf_controls < 0.5
                     labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+                labels_forced_normal = labels_forced_normal_cdf
             
             if(np.all(ratio == old_ratios)):
                 # print('MM finished in {0} iterations'.format(iter_count))
@@ -162,7 +165,7 @@ class KDEMM(object):
                 kde_labels[replace_idxs] = (split_y+1) % 2 # swaps labels
             
             #* Disease direction: force pre-event/healthy-looking patients to flip
-            kde_labels[np.where(labels_forced_normal_alt)[0]] = 0
+            kde_labels[np.where(labels_forced_normal)[0]] = 0
             
             #*** Prevent label swapping for "strong controls"
             fixed_controls_criteria_0 = (kde_labels0==0) # Controls 
@@ -190,6 +193,10 @@ class KDEMM(object):
             if implement_fixed_controls:
                 kde_labels[np.where(fixed_controls_criteria)[0]] = 0
                 #kde_labels[np.where(controls_outliers)[0]] = 1 # Flip outlier controls
+            
+            #* One final fit, following relabelling
+            controls_kde.fit(kde_values[kde_labels == 0])
+            patholog_kde.fit(kde_values[kde_labels == 1])
             
             bin_counts = np.bincount(kde_labels).astype(float)
             mixture = bin_counts[0] / bin_counts.sum()
