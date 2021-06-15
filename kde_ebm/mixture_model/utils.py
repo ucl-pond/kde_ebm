@@ -64,7 +64,7 @@ def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array
     n_particp, n_biomarkers = X.shape
     kde_mixtures = []
     for i in range(n_biomarkers):
-        patholog_dirn = patholog_dirn_array[i]
+        patholog_dirn = patholog_dirn_array[i] if patholog_dirn_array is not None else None
         bio_X = X[:, i]
         bio_y = y[~np.isnan(bio_X)]
         bio_X = bio_X[~np.isnan(bio_X)]
