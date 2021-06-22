@@ -27,7 +27,7 @@ def mixture_model_grid(X, y, mixtures,
         class_names = ['CN', 'AD']
     n_x = np.round(np.sqrt(n_biomarkers)).astype(int)
     n_y = np.ceil(np.sqrt(n_biomarkers)).astype(int)
-    fig, ax = plt.subplots(n_y, n_x, figsize=(10, 10))
+    fig, ax = plt.subplots(n_y, n_x, figsize=(12, 12))
     for i in range(n_biomarkers):
         bio_X = X[:, i]
         bio_y = y[~np.isnan(bio_X)]
@@ -37,7 +37,7 @@ def mixture_model_grid(X, y, mixtures,
                     bio_X[bio_y == 1]]
 
         hist_c = colors[:2]
-        leg1 = ax[i // n_x, i % n_x].hist(hist_dat,
+        leg1 = ax.flat[i].hist(hist_dat,
                                           label=class_names,
                                           density=True,
                                           color=hist_c,
@@ -51,19 +51,20 @@ def mixture_model_grid(X, y, mixtures,
             controls_score, patholog_score = mixtures[i].pdf(linspace)
         probability = 1-mixtures[i].probability(linspace)
         probability *= np.max((patholog_score, controls_score))
-        ax[i // n_x, i % n_x].plot(linspace, controls_score,
+        ax.flat[i].plot(linspace, controls_score,
                                    color=colors[0])
-        ax[i // n_x, i % n_x].plot(linspace, patholog_score,
+        ax.flat[i].plot(linspace, patholog_score,
                                    color=colors[1])
-        leg2 = ax[i // n_x, i % n_x].plot(linspace, probability,
+        leg2 = ax.flat[i].plot(linspace, probability,
                                           color=colors[4])
-        ax[i // n_x, i % n_x].set_title(score_names[i])
-        ax[i // n_x, i % n_x].axes.get_yaxis().set_visible(False)
+        ax.flat[i].set_title(score_names[i])
+        ax.flat[i].axes.get_yaxis().set_visible(False)
+    #* Delete unused axes
     i += 1
     for j in range(i, n_x*n_y):
-        fig.delaxes(ax[j // n_x, j % n_x])
+        fig.delaxes(ax.flat[j])
     fig.legend(leg1[2]+leg2, list(class_names) + ['p(event occured)'],
-               loc='lower right', fontsize=15)
+               bbox_to_anchor=(1,1), loc="upper left", fontsize=15)
     fig.tight_layout()
     return fig, ax
 
