@@ -159,8 +159,7 @@ def stage_histogram(stages, y, max_stage=None, class_names=None):
     idxs = np.arange(max_stage+1)
     bin_w = bins[1] - bins[0]
     ax.set_xticks(bins+bin_w/2)
-    ax.set_xticklabels([str(x) for x in idxs])
-
+    ax.set_xticklabels([str(x) for x in idxs] + [""])
     ax.set_ylabel('Fraction', fontsize=20)
     ax.set_xlabel('EBM Stage', fontsize=20)
     ax.tick_params(axis='both', which='major', labelsize=13)
