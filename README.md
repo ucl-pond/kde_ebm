@@ -1,9 +1,13 @@
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/davecash75/kde_ebm/HEAD?urlpath=lab/tree/examples)
+
 KDE Event-Based Model
 =================
 
 The Event-Based Model (EBM) is a simple, robust model for the estimation of the most likely order of events in a degenerative disease. This version uses nonparametric (kernel density estimate) distributions within the mixture modelling step.
 
 Installation instructions: see [INSTALL](INSTALL.md) file.
+
+You can now try out the walkthrough notebook on [Binder](https://mybinder.readthedocs.io/en/latest/introduction.html). Just click the Launch Binder badge above. 
 
 Important Links
 ===============
