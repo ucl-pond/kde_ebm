@@ -1,0 +1,8 @@
+for i in examples/*ipynb
+do
+  echo $i
+  base_i=`basename ${i}`
+  jupyter nbconvert $i --to notebook --ClearOutputPreprocessor.enabled=True \
+    --stdout > examples/new_${base_i}
+  mv examples/new_${base_i} $i
+done
