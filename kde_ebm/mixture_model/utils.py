@@ -3,7 +3,7 @@ from ..distributions.gaussian import Gaussian
 from .gmm import ParametricMM
 from .kde import KDEMM
 
-
+##- Chris Parker 15-12-21: get_prob_mat() now returns matrix of p(x|~E) & p(x|E) [previously was matrix of p(~E|x) & p(E|x)]
 def get_prob_mat(X, mixture_models):
     """Gives the matrix of probabilities that a patient has normal/abnormal
     measurements for each of the biomarkers. Output is number of patients x
@@ -24,15 +24,15 @@ def get_prob_mat(X, mixture_models):
         Probability for a normal/abnormal measurement in all biomarkers
         for all patients (and controls).
     """
-
     n_particp, n_biomarkers = X.shape
     prob_mat = np.zeros((n_particp, n_biomarkers, 2))
     for i in range(n_biomarkers):
         nan_mask = ~np.isnan(X[:, i])
         probs = mixture_models[i].probability(X[nan_mask, i])
-        prob_mat[nan_mask, i, 0] = probs
-        prob_mat[~nan_mask, i, 0] = 0.5
-    prob_mat[:, :, 1] = 1-prob_mat[:, :, 0]
+        prob_mat[nan_mask, i, 0] = probs[0]
+        prob_mat[~nan_mask, i, 0] = np.mean(probs[0]) # CP: you may want to deal with missing values differently
+        prob_mat[nan_mask, i, 1] = probs[1]
+        prob_mat[~nan_mask, i, 1] = np.mean(probs[1])
     return prob_mat
 
 

@@ -216,26 +216,26 @@ class KDEMM(object):
         return -1*np.sum(data_likelihood)
 
     def pdf(self, X, **kwargs):
+        ##- Chris Parker: now returns p(x|~E) and p(x|E) [was previously p(x|~E)*w_~E & p(x|E)*w_E]
         #* Old version: sklearn fixed-bw KDE
         # controls_score = self.controls_kde.score_samples(X)
         # controls_score = np.exp(controls_score)*self.mixture
         # patholog_score = self.patholog_kde.score_samples(X)
         # patholog_score = np.exp(patholog_score)*(1-self.mixture)
         #* Auto-Variable-bw KDE: awkde
-        controls_score = self.controls_kde.predict(X)*self.mixture
-        patholog_score = self.patholog_kde.predict(X)*(1-self.mixture)
+        controls_score = self.controls_kde.predict(X)
+        patholog_score = self.patholog_kde.predict(X)
         return controls_score, patholog_score
 
     def probability(self, X):
+        ##- Chris Parker: now returns two values: p(x|~E) and p(x|E) [previously returned one: p(~E|x)]
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
         #* Handle missing data
         # controls_score[np.isnan(controls_score)] = 0.5
         # patholog_score[np.isnan(patholog_score)] = 0.5
         # controls_score[controls_score==0] = 0.5
         # patholog_score[patholog_score==0] = 0.5
-        c = controls_score / (controls_score+patholog_score)
-        c[np.isnan(c)] = 0.5
-        return c
+        return controls_score, patholog_score
 
     def BIC(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))

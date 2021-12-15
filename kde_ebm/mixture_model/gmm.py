@@ -49,6 +49,7 @@ class ParametricMM():
         TYPE
             Description
         """
+        ##- Chris Parker: now returns p(x|~E) and p(x|E) [was previously p(x|~E)*w_~E & p(x|E)*w_E]
         if theta is None:
             theta = self.theta
         if np.isnan(X.sum()):
@@ -61,13 +62,12 @@ class ParametricMM():
         n_ad_params = self.ad_comp.n_params
         cn_theta = theta[:n_cn_params]
         ad_theta = theta[n_cn_params:n_cn_params+n_ad_params]
-        mixture = theta[-1]
 
         self.cn_comp.set_theta(cn_theta)
         self.ad_comp.set_theta(ad_theta)
 
-        cn_pdf = self.cn_comp.pdf(X)*mixture
-        ad_pdf = self.ad_comp.pdf(X)*(1-mixture)
+        cn_pdf = self.cn_comp.pdf(X)
+        ad_pdf = self.ad_comp.pdf(X)
         return cn_pdf, ad_pdf
 
     def likelihood(self, theta, X):
@@ -105,9 +105,10 @@ class ParametricMM():
         raise NotImplementedError('Fixed ad component not yet needed')
 
     def probability(self, X):
+        ##- Chris Parker: now returns two values: p(x|~E) and p(x|E) [previously returned one: p(~E|x)]
         theta = self.theta
         controls_score, patholog_score = self.pdf(theta, X)
-        return controls_score / (controls_score+patholog_score)
+        return controls_score, patholog_score
 
     def fit(self, X, y):
         """This will fit a mixture model to some given data. Labelled data
