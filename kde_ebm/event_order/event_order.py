@@ -19,12 +19,9 @@ class EventOrder(object):
         self.score = score
 
     def score_ordering(self, prob_mat):
-        k = prob_mat.shape[1]+1
-        p_perm = self.calc_perm_matrix(prob_mat)
-
-        likelihood = np.sum(np.log(np.sum((1./k)*p_perm, 1)+1e-250))
+        likelihoods = calc_indiv_likelihoods(self, prob_mat)
+        likelihood = np.sum(likelihoods)
         self.score = likelihood
-
         return likelihood
 
     def calc_indiv_likelihoods(self, prob_mat):
