@@ -226,6 +226,29 @@ class KDEMM(object):
         patholog_score = self.patholog_kde.predict(X)*(1-self.mixture)
         return controls_score, patholog_score
 
+    def pdfs_mixture_components(self, X, **kwargs):
+        #* Old version: sklearn fixed-bw KDE
+        # controls_score = self.controls_kde.score_samples(X)
+        # patholog_score = self.patholog_kde.score_samples(X)
+        #* Auto-Variable-bw KDE: awkde
+        controls_score = self.controls_kde.predict(X)
+        patholog_score = self.patholog_kde.predict(X)
+        return controls_score, patholog_score
+
+    def impute_missing(self,X,num=1000):
+        # High-resolution fake data vector
+        x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
+        # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
+        p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
+        # Find x_missing where p(x_missing|E) == p(x_missing|~E)
+        likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E)
+        x_missing = x[ np.where(likelihood_abs_diff==np.min(likelihood_abs_diff))[0] ]
+        # Impute
+        missing_entries = np.isnan(X)
+        X_imputed = X
+        X_imputed[missing_entries] = x_missing
+        return X_imputed
+
     def probability(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
         #* Handle missing data

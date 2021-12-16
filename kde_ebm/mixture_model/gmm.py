@@ -70,6 +70,39 @@ class ParametricMM():
         ad_pdf = self.ad_comp.pdf(X)*(1-mixture)
         return cn_pdf, ad_pdf
 
+    def pdfs_mixture_components(self, theta, X):
+        if theta is None:
+            theta = self.theta
+        if np.isnan(theta.sum()):
+            out = np.empty(X.shape[0])
+            out[:] = np.nan
+            return out, out
+        n_cn_params = self.cn_comp.n_params
+        n_ad_params = self.ad_comp.n_params
+        cn_theta = theta[:n_cn_params]
+        ad_theta = theta[n_cn_params:n_cn_params+n_ad_params]
+        #mixture = theta[-1]
+
+        self.cn_comp.set_theta(cn_theta)
+        self.ad_comp.set_theta(ad_theta)
+        p_x_given_notE = self.cn_comp.pdf(X)
+        p_x_given_E = self.ad_comp.pdf(X)
+        return p_x_given_notE, p_x_given_E
+
+    def impute_missing(self,X,num=1000):
+        # High-resolution fake data vector
+        x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
+        # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
+        p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
+        # Find x_missing where p(x_missing|E) == p(x_missing|~E)
+        likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E)
+        x_missing = x[ np.where(likelihood_abs_diff==np.min(likelihood_abs_diff))[0] ]
+        # Impute
+        missing_entries = np.isnan(X)
+        X_imputed = X
+        X_imputed[missing_entries] = x_missing
+        return X_imputed
+
     def likelihood(self, theta, X):
         """"Calculates the likelihood of the data given the model
         parameters scored in theta. theta should contain normal mean,
