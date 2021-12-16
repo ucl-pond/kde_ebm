@@ -242,13 +242,13 @@ class KDEMM(object):
         p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
         # Find x_missing where p(x_missing|E) == p(x_missing|~E)
         likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E)
-        x_missing = x[ (likelihood_abs_diff==np.min(likelihood_abs_diff))]
+        x_missing = x[ (likelihood_abs_diff==np.min(likelihood_abs_diff)) ]
         if len(x_missing)>1:
             x_missing = x_missing[0]
         # Impute
         missing_entries = np.isnan(X)
-        X_imputed = X
-        X_imputed[missing_entries] = x_missing
+        X_imputed = np.copy(X)
+        np.putmask(X_imputed,missing_entries,x_missing)
         return X_imputed
 
     def probability(self, X):
