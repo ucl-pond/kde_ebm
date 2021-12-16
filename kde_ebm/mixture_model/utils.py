@@ -28,7 +28,7 @@ def get_prob_mat(X, mixture_models):
     n_particp, n_biomarkers = X.shape
     prob_mat = np.zeros((n_particp, n_biomarkers, 2))
     for i in range(n_biomarkers):
-        X_imputed = mixture_models[i].impute_missing(X[:,i])
+        X_imputed = mixture_models[i].impute_missing(X[:,i].reshape(-1,1))
         probs = mixture_models[i].pdfs_mixture_components(X_imputed[:, i])
         prob_mat[:, i, 0] = probs[0]
         prob_mat[:, i, 1] = probs[1]
