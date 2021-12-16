@@ -210,13 +210,14 @@ class KDEMM(object):
         return self
 
     def likelihood(self, X):
+        ##- CP (requested change): functionality unaltered. Weights moved inside here because pdf() was updated
         controls_score, patholog_score = self.pdf(X)
-        data_likelihood = controls_score+patholog_score
+        data_likelihood = controls_score*self.mixture + patholog_score*(1-self.mixture)
         data_likelihood = np.log(data_likelihood)
         return -1*np.sum(data_likelihood)
 
     def pdf(self, X, **kwargs):
-        ##- Chris Parker: now returns p(x|~E) and p(x|E) [was previously p(x|~E)*w_~E & p(x|E)*w_E]
+        ##- CP: now returns p(x|~E) and p(x|E)
         #* Old version: sklearn fixed-bw KDE
         # controls_score = self.controls_kde.score_samples(X)
         # controls_score = np.exp(controls_score)*self.mixture
@@ -228,14 +229,16 @@ class KDEMM(object):
         return controls_score, patholog_score
 
     def probability(self, X):
-        ##- Chris Parker: now returns two values: p(x|~E) and p(x|E) [previously returned one: p(~E|x)]
-        controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
+        ##- CP (requested change) added weights to calculate p(~E|x)
+        controls_pdf, patholog_pdf = self.pdf(X.reshape(-1, 1))
+        controls_score = controls_pdf * self.mixture
+        patholog_score = patholog_pdf * (1-self.mixture)
         #* Handle missing data
         # controls_score[np.isnan(controls_score)] = 0.5
         # patholog_score[np.isnan(patholog_score)] = 0.5
         # controls_score[controls_score==0] = 0.5
         # patholog_score[patholog_score==0] = 0.5
-        return controls_score, patholog_score
+        return controls_score / (controls_score+patholog_score)
 
     def BIC(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))

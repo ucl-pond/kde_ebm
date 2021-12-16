@@ -49,7 +49,7 @@ class ParametricMM():
         TYPE
             Description
         """
-        ##- Chris Parker: now returns p(x|~E) and p(x|E) [was previously p(x|~E)*w_~E & p(x|E)*w_E]
+        ##- CP: now returns p(x|~E) and p(x|E)
         if theta is None:
             theta = self.theta
         if np.isnan(X.sum()):
@@ -89,10 +89,12 @@ class ParametricMM():
         likelihood : float
             Negative log likelihood of the data given the parameters theta.
         """
+        ##- CP: functionality unaltered. Weights moved inside here because pdf() was updated
         # thetaNums allows us to use other distributions with a varying
         # number of paramters. Not included in this version of the code.
         cn_pdf, ad_pdf = self.pdf(theta, X)
-        data_likelihood = cn_pdf + ad_pdf
+        mixture = theta[-1]
+        data_likelihood = cn_pdf*mixture + ad_pdf*(1-mixture)
         data_likelihood[data_likelihood == 0] = np.finfo(float).eps
         data_likelihood = np.log(data_likelihood)
         return -1*np.sum(data_likelihood)
@@ -105,10 +107,12 @@ class ParametricMM():
         raise NotImplementedError('Fixed ad component not yet needed')
 
     def probability(self, X):
-        ##- Chris Parker: now returns two values: p(x|~E) and p(x|E) [previously returned one: p(~E|x)]
+        ##- CP (requested change): added weights to calculate p(~E|x)
         theta = self.theta
-        controls_score, patholog_score = self.pdf(theta, X)
-        return controls_score, patholog_score
+        controls_pdf, patholog_pdf = self.pdf(theta, X)
+        controls_score = controls_pdf * self.mix
+        patholog_score = patholog_pdf * (1-self.mix)
+        return controls_score / (controls_score+patholog_score)
 
     def fit(self, X, y):
         """This will fit a mixture model to some given data. Labelled data

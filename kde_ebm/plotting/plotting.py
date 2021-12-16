@@ -6,7 +6,6 @@ from ..mixture_model import ParametricMM
 
 colors = ['C{}'.format(x) for x in range(10)]
 
-
 def greedy_ascent_trace(greedy_dict):
     fig, ax = plt.subplots()
     for key, value in greedy_dict.items():
@@ -53,11 +52,16 @@ def mixture_model_grid(X, y, mixtures,
                                align=hist_align,
                                bins=bin_edges)
         linspace = np.linspace(bio_X.min(), bio_X.max(), 100).reshape(-1, 1)
+        # CP (requested change): mixture weights added here because pdf() was updated
         if isinstance(mixtures[i], ParametricMM):
-            controls_score, patholog_score = mixtures[i].pdf(mixtures[i].theta,
-                                                             linspace)
+            controls_pdf, patholog_pdf = mixtures[i].pdf(mixtures[i].theta, linspace)
+            controls_score = controls_pdf * mixtures[i].mix
+            patholog_score = patholog_pdf * (1-mixtures[i].mix)
         else:
-            controls_score, patholog_score = mixtures[i].pdf(linspace)
+            controls_pdf, patholog_pdf = mixtures[i].pdf(linspace)
+            controls_score = controls_pdf * mixtures[i].mixture
+            patholog_score = patholog_pdf * (1 - mixtures[i].mixture)
+
         probability = 1-mixtures[i].probability(linspace)
         probability *= np.max((patholog_score, controls_score))
         ax.flat[i].plot(linspace, controls_score,
