@@ -19,7 +19,7 @@ class EventOrder(object):
         self.score = score
 
     def score_ordering(self, prob_mat):
-        likelihoods = self.calc_indiv_likelihoods(self, prob_mat)
+        likelihoods = self.calc_indiv_likelihoods(prob_mat)
         likelihood = np.sum(likelihoods)
         self.score = likelihood
         return likelihood
