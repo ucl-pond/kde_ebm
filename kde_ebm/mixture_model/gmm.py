@@ -70,7 +70,7 @@ class ParametricMM():
         ad_pdf = self.ad_comp.pdf(X)*(1-mixture)
         return cn_pdf, ad_pdf
 
-    def pdfs_mixture_components(self, theta, X):
+    def pdfs_mixture_components(self, X, theta=None):
         if theta is None:
             theta = self.theta
         if np.isnan(theta.sum()):
@@ -90,18 +90,21 @@ class ParametricMM():
         return p_x_given_notE, p_x_given_E
 
     def impute_missing(self,X,num=1000):
-        # High-resolution fake data vector
-        x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
-        # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
-        p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
-        # Find x_missing where p(x_missing|E) == p(x_missing|~E)
-        likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E)
-        x_missing = x[ np.where(likelihood_abs_diff==np.min(likelihood_abs_diff))[0] ]
-        # Impute
-        missing_entries = np.isnan(X)
-        X_imputed = X
-        X_imputed[missing_entries] = x_missing
-        return X_imputed
+        if np.isnan(X).any():
+            # High-resolution fake data vector
+            x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
+            # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
+            p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
+            # Find x_missing where p(x_missing|E) == p(x_missing|~E)
+            likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E)
+            x_missing = x[ np.where(likelihood_abs_diff==np.min(likelihood_abs_diff))[0] ]
+            # Impute
+            missing_entries = np.isnan(X)
+            X_imputed = X
+            X_imputed[missing_entries] = x_missing
+            return X_imputed
+        else:
+            return X
 
     def likelihood(self, theta, X):
         """"Calculates the likelihood of the data given the model
