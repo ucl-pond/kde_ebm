@@ -30,8 +30,8 @@ def get_prob_mat(X, mixture_models):
     for i in range(n_biomarkers):
         X_imputed = mixture_models[i].impute_missing(X[:,i].reshape(-1,1))
         probs = mixture_models[i].pdfs_mixture_components(X_imputed)
-        prob_mat[:, i, 0] = probs[0]
-        prob_mat[:, i, 1] = probs[1]
+        prob_mat[:, i, 0] = probs[0].flatten()
+        prob_mat[:, i, 1] = probs[1].flatten()
     return prob_mat
 
 
