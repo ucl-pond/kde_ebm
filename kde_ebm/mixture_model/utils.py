@@ -28,11 +28,11 @@ def get_prob_mat(X, mixture_models):
     n_particp, n_biomarkers = X.shape
     prob_mat = np.zeros((n_particp, n_biomarkers, 2))
     for i in range(n_biomarkers):
-        nan_mask = ~np.isnan(X[:, i])
-        probs = mixture_models[i].probability(X[nan_mask, i])
-        prob_mat[nan_mask, i, 0] = probs
-        prob_mat[~nan_mask, i, 0] = 0.5
-    prob_mat[:, :, 1] = 1-prob_mat[:, :, 0]
+        # Impute missing data s.t. sequence inference is not biassed, i.e. p(x|E) == p(x|!E) and both p!=0
+        X_imputed = mixture_models[i].impute_missing(X[:,i].reshape(-1,1))
+        probs = mixture_models[i].pdfs_mixture_components(X_imputed)
+        prob_mat[:, i, 0] = probs[0].flatten()
+        prob_mat[:, i, 1] = probs[1].flatten()
     return prob_mat
 
 

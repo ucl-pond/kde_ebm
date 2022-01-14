@@ -1,4 +1,4 @@
-# Authors: Nicholas C. Firth <ncfirth87@gmail.com>
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>; Neil Oxtoby <https://github.com/noxtoby>
 # License: TBC
 from scipy import optimize
 import numpy as np
@@ -69,6 +69,45 @@ class ParametricMM():
         cn_pdf = self.cn_comp.pdf(X)*mixture
         ad_pdf = self.ad_comp.pdf(X)*(1-mixture)
         return cn_pdf, ad_pdf
+
+    def pdfs_mixture_components(self, X, theta=None):
+        if theta is None:
+            theta = self.theta
+        if np.isnan(theta.sum()):
+            out = np.empty(X.shape[0])
+            out[:] = np.nan
+            return out, out
+        n_cn_params = self.cn_comp.n_params
+        n_ad_params = self.ad_comp.n_params
+        cn_theta = theta[:n_cn_params]
+        ad_theta = theta[n_cn_params:n_cn_params+n_ad_params]
+        #mixture = theta[-1]
+
+        self.cn_comp.set_theta(cn_theta)
+        self.ad_comp.set_theta(ad_theta)
+        p_x_given_notE = self.cn_comp.pdf(X)
+        p_x_given_E = self.ad_comp.pdf(X)
+        return p_x_given_notE, p_x_given_E
+
+    def impute_missing(self,X,num=1000):
+        # FIXME: move to mixture_model/utils.py (because it's also in kde.py)
+        if np.isnan(X).any():
+            # High-resolution fake data vector
+            x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
+            # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
+            p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
+            # Find x_missing where p(x_missing|E) == p(x_missing|~E)
+            likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E) # BEWARE: minimum diff might be at edges => use d^2 (diff) / dx^2 > 0
+            likelihood_abs_diff_d2 = np.gradient(np.gradient(likelihood_abs_diff))
+            central_minimum = np.where(likelihood_abs_diff_d2==np.max(likelihood_abs_diff_d2))[0]
+            x_missing = x[ np.median(central_minimum).astype(int) ] # handles multiple x (takes median)
+            # Impute
+            missing_entries = np.isnan(X)
+            X_imputed = np.copy(X)
+            np.putmask(X_imputed,missing_entries,x_missing)
+            return X_imputed
+        else:
+            return X
 
     def likelihood(self, theta, X):
         """"Calculates the likelihood of the data given the model
