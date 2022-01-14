@@ -1,3 +1,4 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>; Neil Oxtoby <https://github.com/noxtoby>
 import numpy as np
 from sklearn import neighbors
 from awkde import GaussianKDE 
@@ -236,20 +237,24 @@ class KDEMM(object):
         return controls_score, patholog_score
 
     def impute_missing(self,X,num=1000):
-        # High-resolution fake data vector
-        x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
-        # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
-        p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
-        # Find x_missing where p(x_missing|E) == p(x_missing|~E)
-        likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E)
-        x_missing = x[ (likelihood_abs_diff==np.min(likelihood_abs_diff)) ]
-        if len(x_missing)>1:
-            x_missing = x_missing[0]
-        # Impute
-        missing_entries = np.isnan(X)
-        X_imputed = np.copy(X)
-        np.putmask(X_imputed,missing_entries,x_missing)
-        return X_imputed
+        # FIXME: move to mixture_model/utils.py (because it's also in gmm.py)
+        if np.isnan(X).any():
+            # High-resolution fake data vector
+            x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
+            # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
+            p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
+            # Find x_missing where p(x_missing|E) == p(x_missing|~E)
+            likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E) # BEWARE: minimum diff might be at edges => use d^2 (diff) / dx^2 > 0
+            likelihood_abs_diff_d2 = np.gradient(np.gradient(likelihood_abs_diff))
+            central_minimum = np.where(likelihood_abs_diff_d2==np.max(likelihood_abs_diff_d2))[0]
+            x_missing = x[ np.median(central_minimum).astype(int) ] # handles multiple x (takes median)
+            # Impute
+            missing_entries = np.isnan(X)
+            X_imputed = np.copy(X)
+            np.putmask(X_imputed,missing_entries,x_missing)
+            return X_imputed
+        else:
+            return X
 
     def probability(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
