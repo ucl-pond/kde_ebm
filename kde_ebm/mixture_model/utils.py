@@ -36,11 +36,12 @@ def get_prob_mat(X, mixture_models):
     return prob_mat
 
 
-def fit_all_gmm_models(X, y, implement_fixed_controls=False):
-    #* Extract only the first two diagnoses
-    msk = np.where(y<2)[0]
-    X = X[msk]
-    y = y[msk]
+def fit_all_gmm_models(X, y, fit_all_subjects=False, implement_fixed_controls=False):
+    if not fit_all_subjects:
+        #* Extract only the first two diagnoses (controls & patients)
+        msk = np.where(y<2)[0]
+        X = X[msk]
+        y = y[msk]
     
     n_particp, n_biomarkers = X.shape
     mixture_models = []
