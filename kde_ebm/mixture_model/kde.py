@@ -92,11 +92,11 @@ class KDEMM(object):
             if patholog_dirn<0:
                 #* More normal (greater) than half the controls: CDF_controls > 0.5
                 labels_forced_normal_cdf = cdf_controls > 0.5
-                labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
+                labels_forced_normal_alt = kde_values > np.nanmedian(kde_values[kde_labels0 == 0])
             elif patholog_dirn>0:
                 #* More normal (less)    than half the controls: CDF_controls < 0.5
                 labels_forced_normal_cdf = cdf_controls < 0.5
-                labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+                labels_forced_normal_alt = kde_values < np.nanmedian(kde_values[kde_labels0 == 0])
             labels_forced_normal = labels_forced_normal_cdf
             
             #* FIXME: Make this a prior and change the mixture modelling to be Bayesian
@@ -131,11 +131,11 @@ class KDEMM(object):
                 if patholog_dirn<0:
                     #* More normal (greater) than half the controls: CDF_controls > 0.5
                     labels_forced_normal_cdf = cdf_controls > 0.5
-                    labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
+                    labels_forced_normal_alt = kde_values > np.nanmedian(kde_values[kde_labels0 == 0])
                 elif patholog_dirn>0:
                     #* More normal (less)    than half the controls: CDF_controls < 0.5
                     labels_forced_normal_cdf = cdf_controls < 0.5
-                    labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+                    labels_forced_normal_alt = kde_values < np.nanmedian(kde_values[kde_labels0 == 0])
                 labels_forced_normal = labels_forced_normal_cdf
             
             if(np.all(ratio == old_ratios)):
