@@ -247,7 +247,7 @@ class KDEMM(object):
             likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E) # BEWARE: minimum diff might be at edges => use d^2 (diff) / dx^2 > 0
             likelihood_abs_diff_d2 = np.gradient(np.gradient(likelihood_abs_diff))
             central_minimum = np.where(likelihood_abs_diff_d2==np.max(likelihood_abs_diff_d2))[0]
-            x_missing = x[ np.median(central_minimum).astype(int) ] # handles multiple x (takes median)
+            x_missing = x[ np.nanmedian(central_minimum).astype(int) ] # handles multiple x (takes median)
             # Impute
             missing_entries = np.isnan(X)
             X_imputed = np.copy(X)
