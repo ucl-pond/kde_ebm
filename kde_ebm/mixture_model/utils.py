@@ -36,7 +36,7 @@ def get_prob_mat(X, mixture_models):
     return prob_mat
 
 
-def fit_all_gmm_models(X, y, fit_all_subjects=False, implement_fixed_controls=False):
+def fit_all_gmm_models(X, y, fit_all_subjects=False, implement_fixed_controls=False, patholog_dirn=None, outlier_controls_quantile = 0.9):
     if not fit_all_subjects:
         #* Extract only the first two diagnoses (controls & patients)
         msk = np.where(y<2)[0]
@@ -51,12 +51,12 @@ def fit_all_gmm_models(X, y, fit_all_subjects=False, implement_fixed_controls=Fa
         cn_comp = Gaussian()
         ad_comp = Gaussian()
         mm = ParametricMM(cn_comp, ad_comp)
-        mm.fit(bio_X, bio_y)
+        mm.fit(bio_X, bio_y, implement_fixed_controls=implement_fixed_controls)
         mixture_models.append(mm)
     return mixture_models
 
 
-def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array=None):
+def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array=None, outlier_controls_quantile = 0.9):
     #* Extract only the first two diagnoses
     msk = np.where(y<2)[0]
     X = X[msk]
@@ -75,6 +75,6 @@ def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array
         #     )
         # )
         kde = KDEMM()
-        kde.fit(bio_X, bio_y,implement_fixed_controls, patholog_dirn=patholog_dirn)
+        kde.fit(bio_X, bio_y,implement_fixed_controls=implement_fixed_controls, patholog_dirn=patholog_dirn,outlier_controls_quantile=outlier_controls_quantile)
         kde_mixtures.append(kde)
     return kde_mixtures
