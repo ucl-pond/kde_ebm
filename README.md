@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/davecash75/kde_ebm/HEAD?urlpath=lab/tree/examples)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ucl-pond/kde_ebm/HEAD?urlpath=lab/tree/examples)
 
 KDE Event-Based Model
 =================
