@@ -28,19 +28,20 @@ def get_prob_mat(X, mixture_models):
     n_particp, n_biomarkers = X.shape
     prob_mat = np.zeros((n_particp, n_biomarkers, 2))
     for i in range(n_biomarkers):
-        nan_mask = ~np.isnan(X[:, i])
-        probs = mixture_models[i].probability(X[nan_mask, i])
-        prob_mat[nan_mask, i, 0] = probs
-        prob_mat[~nan_mask, i, 0] = 0.5
-    prob_mat[:, :, 1] = 1-prob_mat[:, :, 0]
+        # Impute missing data s.t. sequence inference is not biassed, i.e. p(x|E) == p(x|!E) and both p!=0
+        X_imputed = mixture_models[i].impute_missing(X[:,i].reshape(-1,1))
+        probs = mixture_models[i].pdfs_mixture_components(X_imputed)
+        prob_mat[:, i, 0] = probs[0].flatten()
+        prob_mat[:, i, 1] = probs[1].flatten()
     return prob_mat
 
 
-def fit_all_gmm_models(X, y, implement_fixed_controls=False):
-    #* Extract only the first two diagnoses
-    msk = np.where(y<2)[0]
-    X = X[msk]
-    y = y[msk]
+def fit_all_gmm_models(X, y, fit_all_subjects=False, implement_fixed_controls=False, patholog_dirn=None, outlier_controls_quantile = 0.9):
+    if not fit_all_subjects:
+        #* Extract only the first two diagnoses (controls & patients)
+        msk = np.where(y<2)[0]
+        X = X[msk]
+        y = y[msk]
     
     n_particp, n_biomarkers = X.shape
     mixture_models = []
@@ -50,12 +51,15 @@ def fit_all_gmm_models(X, y, implement_fixed_controls=False):
         cn_comp = Gaussian()
         ad_comp = Gaussian()
         mm = ParametricMM(cn_comp, ad_comp)
-        mm.fit(bio_X, bio_y)
+        if implement_fixed_controls:
+            mm.fit_constrained(bio_X,bio_y)
+        else:
+            mm.fit(bio_X, bio_y)
         mixture_models.append(mm)
     return mixture_models
 
 
-def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array=None):
+def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array=None, outlier_controls_quantile = 0.9):
     #* Extract only the first two diagnoses
     msk = np.where(y<2)[0]
     X = X[msk]
@@ -74,6 +78,6 @@ def fit_all_kde_models(X, y, implement_fixed_controls=False, patholog_dirn_array
         #     )
         # )
         kde = KDEMM()
-        kde.fit(bio_X, bio_y,implement_fixed_controls, patholog_dirn=patholog_dirn)
+        kde.fit(bio_X, bio_y,implement_fixed_controls=implement_fixed_controls, patholog_dirn=patholog_dirn,outlier_controls_quantile=outlier_controls_quantile)
         kde_mixtures.append(kde)
     return kde_mixtures

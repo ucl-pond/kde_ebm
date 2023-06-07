@@ -1,3 +1,4 @@
+# Authors: Nicholas C. Firth <ncfirth87@gmail.com>; Neil Oxtoby <https://github.com/noxtoby>
 import numpy as np
 from sklearn import neighbors
 from awkde import GaussianKDE 
@@ -91,11 +92,11 @@ class KDEMM(object):
             if patholog_dirn<0:
                 #* More normal (greater) than half the controls: CDF_controls > 0.5
                 labels_forced_normal_cdf = cdf_controls > 0.5
-                labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
+                labels_forced_normal_alt = kde_values > np.nanmedian(kde_values[kde_labels0 == 0])
             elif patholog_dirn>0:
                 #* More normal (less)    than half the controls: CDF_controls < 0.5
                 labels_forced_normal_cdf = cdf_controls < 0.5
-                labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+                labels_forced_normal_alt = kde_values < np.nanmedian(kde_values[kde_labels0 == 0])
             labels_forced_normal = labels_forced_normal_cdf
             
             #* FIXME: Make this a prior and change the mixture modelling to be Bayesian
@@ -130,11 +131,11 @@ class KDEMM(object):
                 if patholog_dirn<0:
                     #* More normal (greater) than half the controls: CDF_controls > 0.5
                     labels_forced_normal_cdf = cdf_controls > 0.5
-                    labels_forced_normal_alt = kde_values > np.median(kde_values[kde_labels0 == 0])
+                    labels_forced_normal_alt = kde_values > np.nanmedian(kde_values[kde_labels0 == 0])
                 elif patholog_dirn>0:
                     #* More normal (less)    than half the controls: CDF_controls < 0.5
                     labels_forced_normal_cdf = cdf_controls < 0.5
-                    labels_forced_normal_alt = kde_values < np.median(kde_values[kde_labels0 == 0])
+                    labels_forced_normal_alt = kde_values < np.nanmedian(kde_values[kde_labels0 == 0])
                 labels_forced_normal = labels_forced_normal_cdf
             
             if(np.all(ratio == old_ratios)):
@@ -225,6 +226,35 @@ class KDEMM(object):
         controls_score = self.controls_kde.predict(X)*self.mixture
         patholog_score = self.patholog_kde.predict(X)*(1-self.mixture)
         return controls_score, patholog_score
+
+    def pdfs_mixture_components(self, X, **kwargs):
+        #* Old version: sklearn fixed-bw KDE
+        # controls_score = self.controls_kde.score_samples(X)
+        # patholog_score = self.patholog_kde.score_samples(X)
+        #* Auto-Variable-bw KDE: awkde
+        controls_score = self.controls_kde.predict(X)
+        patholog_score = self.patholog_kde.predict(X)
+        return controls_score, patholog_score
+
+    def impute_missing(self,X,num=1000):
+        # FIXME: move to mixture_model/utils.py (because it's also in gmm.py)
+        if np.isnan(X).any():
+            # High-resolution fake data vector
+            x = np.linspace(np.nanmin(X),np.nanmax(X),num=num).reshape(-1, 1)
+            # Unweighted likelihoods from the MM: p(x|E) and p(x|~E)
+            p_x_given_notE, p_x_given_E = self.pdfs_mixture_components(x)
+            # Find x_missing where p(x_missing|E) == p(x_missing|~E)
+            likelihood_abs_diff = np.abs(p_x_given_notE - p_x_given_E) # BEWARE: minimum diff might be at edges => use d^2 (diff) / dx^2 > 0
+            likelihood_abs_diff_d2 = np.gradient(np.gradient(likelihood_abs_diff))
+            central_minimum = np.where(likelihood_abs_diff_d2==np.max(likelihood_abs_diff_d2))[0]
+            x_missing = x[ np.nanmedian(central_minimum).astype(int) ] # handles multiple x (takes median)
+            # Impute
+            missing_entries = np.isnan(X)
+            X_imputed = np.copy(X)
+            np.putmask(X_imputed,missing_entries,x_missing)
+            return X_imputed
+        else:
+            return X
 
     def probability(self, X):
         controls_score, patholog_score = self.pdf(X.reshape(-1, 1))
