@@ -226,4 +226,6 @@ class ParametricMM():
             res = res.x
         self.ad_comp.set_theta(res[:-1])
         self.mix = res[-1]
+        res = np.append(self.cn_comp.get_theta(), res)
+        self.theta = res
         return res

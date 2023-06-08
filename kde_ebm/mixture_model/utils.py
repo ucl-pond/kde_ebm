@@ -51,7 +51,10 @@ def fit_all_gmm_models(X, y, fit_all_subjects=False, implement_fixed_controls=Fa
         cn_comp = Gaussian()
         ad_comp = Gaussian()
         mm = ParametricMM(cn_comp, ad_comp)
-        mm.fit(bio_X, bio_y, implement_fixed_controls=implement_fixed_controls)
+        if implement_fixed_controls:
+            mm.fit_constrained(bio_X,bio_y)
+        else:
+            mm.fit(bio_X, bio_y)
         mixture_models.append(mm)
     return mixture_models
 
