@@ -2,29 +2,12 @@
 # License: MIT
 __version__ = '0.0.2'
 
-
-def configuration(parent_package='', top_path=None):
-    from numpy.distutils.misc_util import Configuration
-    config = Configuration(None, parent_package, top_path)
-
-    # Avoid non-useful msg:
-    # "Ignoring attempt to set 'name' (from ... "
-    config.set_options(ignore_setup_xxx_py=True,
-                       assume_default_configuration=True,
-                       delegate_options_to_subpackages=True,
-                       quiet=True)
-
-    config.add_subpackage('kde_ebm')
-
-    return config
-
-
 def setup_package():
+    from setuptools import setup, find_packages
     metadata = dict(name='kde_ebm',
                     maintainer='Neil P. Oxtoby',
-                    maintainer_email='n.oxtoby@ucl.ac.uk',
-                    description='KDE EBM code',
-                    license='TBC',
+                    description='Event Based Model with Kernel Density Estimation mixture modelling',
+                    license='MIT',
                     url='https://ucl-pond.github.io/kde_ebm',
                     version=__version__,
                     zip_safe=False,
@@ -36,15 +19,22 @@ def setup_package():
                                  'Programming Language :: Python :: 3',
                                  'Programming Language :: Python :: 3.6',
                                  ],
+                    packages=find_packages()
                     )
 
-    from numpy.distutils.core import setup
-
-    metadata['configuration'] = configuration
-
+    install_requires = [
+        "pybind11",
+        "scipy>=0.9",
+        "numpy>=1.6.1",
+        "matplotlib>=2.0.1",
+        "tqdm",
+        "awkde @ git+https://github.com/noxtoby/awkde",
+        "scikit-learn"
+    ]
+    metadata['install_requires'] = install_requires
+    
     setup(**metadata)
 
 
 if __name__ == "__main__":
     setup_package()
-
