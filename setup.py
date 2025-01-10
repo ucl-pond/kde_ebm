@@ -28,7 +28,7 @@ def setup_package():
         "numpy>=1.6.1",
         "matplotlib>=2.0.1",
         "tqdm",
-        "awkde @ git+https://github.com/noxtoby/awkde",
+        "awkde @ git+https://github.com/noxtoby/awkde.git",
         "scikit-learn"
     ]
     metadata['install_requires'] = install_requires
