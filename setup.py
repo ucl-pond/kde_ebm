@@ -1,6 +1,6 @@
 # Authors: Nicholas C. Firth, Neil P. Oxtoby
 # License: MIT
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 def setup_package():
     from setuptools import setup, find_packages

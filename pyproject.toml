@@ -1,0 +1,24 @@
+# pyproject.toml
+[build-system]
+# kde_ebm: required packages
+requires = [
+    "setuptools >= 42.0.0",
+    "pybind11",
+    "scipy>=0.9",
+    "numpy>=1.6.1",
+    "matplotlib>=2.0.1",
+    "tqdm",
+    "awkde @ git+https://github.com/noxtoby/awkde",
+    "scikit-learn"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kde_ebm"
+version = "0.0.3"
+
+# [tool.setuptools.packages.find]
+# where = ["kde_ebm/datasets"]
+### Include synthetic data
+[tool.setuptools.package-data]
+"kde_ebm.datasets.data" = ["*.csv"]

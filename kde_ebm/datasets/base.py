@@ -41,8 +41,8 @@ def load_synthetic(data_file_name):
         feature_names = ['BM%i' % (x+1) for x in range(n_features)]
         feature_names = np.array(feature_names)
         data = np.empty((n_samples, n_features))
-        target = np.empty((n_samples,), dtype=np.int)
+        target = np.empty((n_samples,), dtype=int)
         for i, ir in enumerate(data_file):
             data[i] = np.asarray(ir[:-1], dtype=np.float64)
-            target[i] = np.asarray(ir[-1], dtype=np.int)
+            target[i] = np.asarray(ir[-1], dtype=int)
     return data, target, feature_names, target_names
