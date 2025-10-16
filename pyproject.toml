@@ -1,24 +1,53 @@
-# pyproject.toml
 [build-system]
-# kde_ebm: required packages
-requires = [
-    "setuptools >= 42.0.0",
-    "pybind11",
-    "scipy>=0.9",
-    "numpy>=1.6.1",
-    "matplotlib>=2.0.1",
-    "tqdm",
-    "awkde @ git+https://github.com/noxtoby/awkde",
-    "scikit-learn"
-]
+requires = ["setuptools>=65.5", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "kde_ebm"
 version = "0.0.3"
+description = "Event Based Model with Kernel Density Estimation mixture modelling"
+readme = "README.md"  # if you have one
+requires-python = ">=3.6"
+license = { text = "MIT" }
+
+authors = [
+  { name = "Nicholas C. Firth" },
+  { name = "Neil P. Oxtoby" }
+]
+
+maintainers = [
+  { name = "Neil P. Oxtoby" }
+]
+
+dependencies = [
+  "pybind11",
+  "scipy>=0.9",
+  "numpy>=1.6.1",
+  "matplotlib>=2.0.1",
+  "tqdm",
+  "scikit-learn",
+  "awkde @ git+https://github.com/noxtoby/awkde.git"
+]
+
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 2",
+  "Programming Language :: Python :: 2.7",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Topic :: Scientific/Engineering"
+]
+
+[project.urls]
+Homepage = "https://ucl-pond.github.io/kde_ebm"
+
+[tool.setuptools]
+packages = ["kde_ebm"]
 
 # [tool.setuptools.packages.find]
-# where = ["kde_ebm/datasets"]
+# where = ["."]
+
 ### Include synthetic data
 [tool.setuptools.package-data]
 "kde_ebm.datasets.data" = ["*.csv"]
